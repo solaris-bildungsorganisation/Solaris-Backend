@@ -1,0 +1,5382 @@
+{
+ "tables": {
+  "access_scopes": {
+   "comment": "FR-AUTH-014 — نطاقات الوصول (فريق spatie)",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "access_scopes",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(20)",
+     "comment": "global | country | region | organization",
+     "nullable": false,
+     "generated": null,
+     "table_name": "access_scopes",
+     "column_name": "type",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "access_scopes",
+     "column_name": "country_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "access_scopes",
+     "column_name": "region_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "access_scopes",
+     "column_name": "organization_id",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "access_scopes",
+     "column_name": "created_at",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "access_scopes",
+     "column_name": "updated_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "varchar(80) (virtual)",
+     "comment": null,
+     "nullable": true,
+     "generated": "concat_ws(_utf8mb4\\':\\',`type`,ifnull(`country_id`,0),ifnull(`region_id`,0),ifnull(`organization_id`,0))",
+     "table_name": "access_scopes",
+     "column_name": "target_key",
+     "ordinal_position": 8
+    }
+   ]
+  },
+  "account_status_histories": {
+   "comment": "FR-AUTH-007/012/013/023 — سجل حالات الحساب",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_status_histories",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_status_histories",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_status_histories",
+     "column_name": "from_status",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_status_histories",
+     "column_name": "to_status",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_status_histories",
+     "column_name": "reason",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_status_histories",
+     "column_name": "changed_by",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "CURRENT_TIMESTAMP",
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_status_histories",
+     "column_name": "created_at",
+     "ordinal_position": 7
+    }
+   ]
+  },
+  "account_type_requests": {
+   "comment": "FR-AUTH-002/004 — طلبات نوع الحساب",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "uuid",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "user_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "requested_role_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "organization_id",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "region_id",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": "الغرض من الطلب — FR-AUTH-004",
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "purpose",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "مسارات ملفات داعمة",
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "attachments",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": "pending",
+     "type": "varchar(20)",
+     "comment": "pending | under_review | approved | rejected | cancelled",
+     "nullable": false,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "status",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "reviewed_by",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "reviewed_at",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "review_note",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "granted_scope_id",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "created_at",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "account_type_requests",
+     "column_name": "updated_at",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "varchar(60) (virtual)",
+     "comment": "مولّد — طلب مفتوح واحد لكل دور",
+     "nullable": true,
+     "generated": "if((`status` in (_utf8mb4\\'pending\\',_utf8mb4\\'under_review\\')),concat(`user_id`,_utf8mb4\\':\\',`requested_role_id`),NULL)",
+     "table_name": "account_type_requests",
+     "column_name": "open_request_key",
+     "ordinal_position": 16
+    }
+   ]
+  },
+  "activity_log": {
+   "comment": "FR-ADMIN-011 · NFR-SEC-007 — سجل تدقيق غير قابل للتعديل",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": "auth | rbac | org | admin | security ...",
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "log_name",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "description",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "subject_type",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "subject_id",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "event",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "causer_type",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "causer_id",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "old/new — بدون كلمات مرور أو أسرار",
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "properties",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "batch_uuid",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "session_id",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "context_id",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "organization_id",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": "internal",
+     "type": "varchar(20)",
+     "comment": "internal | personal | sensitive | restricted",
+     "nullable": false,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "sensitivity",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "varchar(45)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "ip_address",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "user_agent",
+     "ordinal_position": 16
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "created_at",
+     "ordinal_position": 17
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "activity_log",
+     "column_name": "updated_at",
+     "ordinal_position": 18
+    }
+   ]
+  },
+  "auth_events": {
+   "comment": "FR-AUTH-024/026 — سجل أحداث الدخول والأمان",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "session_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(40)",
+     "comment": "login_succeeded | login_failed | logout | lockout | password_reset_requested | password_reset_completed | password_changed | mfa_enabled | mfa_failed | session_revoked | context_switched",
+     "nullable": false,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "event",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(64)",
+     "comment": "sha256 للمعرّف المُدخل عند الفشل — لا نخزن القيمة الخام",
+     "nullable": true,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "identifier_hash",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "varchar(45)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "ip_address",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "user_agent",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "metadata",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": "CURRENT_TIMESTAMP",
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "auth_events",
+     "column_name": "created_at",
+     "ordinal_position": 9
+    }
+   ]
+  },
+  "contexts": {
+   "comment": "FR-AUTH-016/017 — السياق الوظيفي",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(50)",
+     "comment": "learning | teaching | review | content | mentoring | pss | program_management | recruitment | staff | organization | administration",
+     "nullable": false,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "key",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "{\"ar\":\"…\",\"en\":\"…\",\"de\":\"…\"}",
+     "nullable": false,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "name",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "description",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "is_active",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "sort_order",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "created_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "contexts",
+     "column_name": "updated_at",
+     "ordinal_position": 8
+    }
+   ]
+  },
+  "countries": {
+   "comment": "FR-AUTH-031 — الدول",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "char(2)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "iso2",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "char(3)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "iso3",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "name",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(8)",
+     "comment": "+963",
+     "nullable": true,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "phone_code",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "default_language_id",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "standard",
+     "type": "varchar(30)",
+     "comment": "مجموعة السياسة: syria | stable_market | standard — FR-AUTH-033/034",
+     "nullable": false,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "policy_group",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "is_active",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "created_at",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "countries",
+     "column_name": "updated_at",
+     "ordinal_position": 10
+    }
+   ]
+  },
+  "language_requirements": {
+   "comment": "FR-I18N-006 — متطلبات اللغة للبرنامج/الدورة/الفرصة",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "requirable_type",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "requirable_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "language_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(10)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "min_proficiency",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "is_mandatory",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "instruction",
+     "type": "varchar(20)",
+     "comment": "instruction | prerequisite",
+     "nullable": false,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "purpose",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "created_at",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "language_requirements",
+     "column_name": "updated_at",
+     "ordinal_position": 9
+    }
+   ]
+  },
+  "languages": {
+   "comment": "FR-I18N-001/007/009 — اللغات المدعومة",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(10)",
+     "comment": "BCP-47: ar, en, de",
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "code",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "ترجمات الاسم {\"ar\":\"العربية\",\"en\":\"Arabic\"}",
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "name",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(100)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "native_name",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "ltr",
+     "type": "varchar(3)",
+     "comment": "rtl | ltr",
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "direction",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "متاحة كلغة واجهة",
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "is_interface",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": "متاحة كلغة محتوى",
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "is_content",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "is_active",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "sort_order",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "created_at",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "languages",
+     "column_name": "updated_at",
+     "ordinal_position": 11
+    }
+   ]
+  },
+  "metric_snapshots": {
+   "comment": "FR-ADMIN-002..010 · FR-ORG-004 — مؤشرات مجمّعة",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(80)",
+     "comment": "users.registered | users.active | orgs.active | enrollments.completed ...",
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "metric_key",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(10)",
+     "comment": "day | week | month | quarter | year",
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "period_type",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "date",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "period_start",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "date",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "period_end",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "country_id",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "region_id",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "organization_id",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": "_utf8mb4\\'{}\\'",
+     "type": "json",
+     "comment": "أبعاد إضافية (program_id لاحقًا...)",
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "dimensions",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": "",
+     "type": "varchar(64)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "dimensions_hash",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "decimal(18,4)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "value",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": "CURRENT_TIMESTAMP",
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "metric_snapshots",
+     "column_name": "computed_at",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255) (virtual)",
+     "comment": null,
+     "nullable": true,
+     "generated": "concat_ws(_utf8mb4\\':\\',`metric_key`,`period_type`,`period_start`,ifnull(`country_id`,0),ifnull(`region_id`,0),ifnull(`organization_id`,0),`dimensions_hash`)",
+     "table_name": "metric_snapshots",
+     "column_name": "snapshot_key",
+     "ordinal_position": 13
+    }
+   ]
+  },
+  "model_has_permissions": {
+   "comment": "",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_permissions",
+     "column_name": "permission_id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_permissions",
+     "column_name": "model_type",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_permissions",
+     "column_name": "model_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_permissions",
+     "column_name": "scope_id",
+     "ordinal_position": 4
+    }
+   ]
+  },
+  "model_has_roles": {
+   "comment": "",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "role_id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "model_type",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "model_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "scope_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "granted_by",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "grant_reason",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": "Job مجدول يزيل الإسنادات المنتهية",
+     "nullable": true,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "expires_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "CURRENT_TIMESTAMP",
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "model_has_roles",
+     "column_name": "created_at",
+     "ordinal_position": 8
+    }
+   ]
+  },
+  "notification_channels": {
+   "comment": "FR-COM-009 — قنوات الإرسال",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": "in_app | email | sms | push | whatsapp",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "key",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "name",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(50)",
+     "comment": "اسم الـ adapter في الكود",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "driver",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "هل القناة مناسبة لمحتوى حساس — FR-COM-008",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "supports_sensitive",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "is_active",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "إعدادات غير سرية فقط (الأسرار في .env)",
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "config",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "sort_order",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "created_at",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_channels",
+     "column_name": "updated_at",
+     "ordinal_position": 10
+    }
+   ]
+  },
+  "notification_deliveries": {
+   "comment": "FR-COM-008/009 — حالة كل محاولة إرسال",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": "معرّف Notification في Laravel",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "notification_uuid",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "user_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "notification_type_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "channel_id",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "template_id",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "queued",
+     "type": "varchar(30)",
+     "comment": "queued | sent | delivered | failed | skipped_preference | skipped_sensitivity",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "status",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "attempts",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "varchar(50)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "provider",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "provider_message_id",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "last_error",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "sent_at",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "delivered_at",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "failed_at",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "created_at",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_deliveries",
+     "column_name": "updated_at",
+     "ordinal_position": 16
+    }
+   ]
+  },
+  "notification_preferences": {
+   "comment": "FR-COM-007 — تفضيلات الإشعارات",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_preferences",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_preferences",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_preferences",
+     "column_name": "category",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_preferences",
+     "column_name": "channel_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_preferences",
+     "column_name": "is_enabled",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_preferences",
+     "column_name": "created_at",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_preferences",
+     "column_name": "updated_at",
+     "ordinal_position": 7
+    }
+   ]
+  },
+  "notification_templates": {
+   "comment": "قوالب الإشعارات لكل نوع × قناة × لغة",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "notification_type_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "channel_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "language_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "subject",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": "متغيرات بصيغة {{ name }}",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "body",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "1",
+     "type": "int unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "version",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "is_active",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "updated_by",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "created_at",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_templates",
+     "column_name": "updated_at",
+     "ordinal_position": 11
+    }
+   ]
+  },
+  "notification_types": {
+   "comment": "FR-COM-001..006 — كتالوج أحداث الإشعارات",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(80)",
+     "comment": "مثل enrollment.accepted | session.reminder | security.new_login",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "key",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": "account | enrollment | session | result | certificate | job | finance | admin | security",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "category",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "name",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "description",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "personal",
+     "type": "varchar(20)",
+     "comment": "public | personal | sensitive",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "sensitivity",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "لا يمكن تعطيله من التفضيلات (أمني/إداري)",
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "is_mandatory",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "_utf8mb4\\'[\"in_app\"]\\'",
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "default_channels",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "is_active",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "created_at",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notification_types",
+     "column_name": "updated_at",
+     "ordinal_position": 11
+    }
+   ]
+  },
+  "notifications": {
+   "comment": "إشعارات داخل التطبيق (Laravel database channel)",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "type",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "notifiable_type",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "notifiable_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "data",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "read_at",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "created_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "notifications",
+     "column_name": "updated_at",
+     "ordinal_position": 8
+    }
+   ]
+  },
+  "organization_invitations": {
+   "comment": "FR-ORG-002 — دعوات الانضمام للمؤسسة",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "organization_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "email",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(20)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "phone",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "membership_type",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "role_id",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "varchar(64)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "token_hash",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "pending",
+     "type": "varchar(20)",
+     "comment": "pending | accepted | expired | revoked",
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "status",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "invited_by",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "accepted_by",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "expires_at",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "accepted_at",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "created_at",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_invitations",
+     "column_name": "updated_at",
+     "ordinal_position": 14
+    }
+   ]
+  },
+  "organization_memberships": {
+   "comment": "FR-AUTH-015 · FR-ORG-002/006 — عضوية المستخدم في المؤسسة",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "organization_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "user_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": "member | staff | learner | instructor | employer_representative | partner_contact | volunteer — FR-ORG-006",
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "membership_type",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "active",
+     "type": "varchar(20)",
+     "comment": "pending | active | suspended | left | removed",
+     "nullable": false,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "status",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "varchar(150)",
+     "comment": "المسمى داخل المؤسسة",
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "title",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "joined_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "left_at",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "added_by",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "created_at",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organization_memberships",
+     "column_name": "updated_at",
+     "ordinal_position": 11
+    }
+   ]
+  },
+  "organizations": {
+   "comment": "FR-ORG-001/005/007 — الحسابات المؤسسية",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "uuid",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "name",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(150)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "slug",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": "educational | training_center | ngo | employer | donor | government | partner | other — FR-ORG-005",
+     "nullable": false,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "type",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "pending",
+     "type": "varchar(20)",
+     "comment": "pending | active | suspended | archived",
+     "nullable": false,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "status",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "country_id",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "region_id",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "varchar(100)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "registration_number",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "email",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "varchar(20)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "phone",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "website",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "address",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "logo_path",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "description",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": "_utf8mb4\\'{}\\'",
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "settings",
+     "ordinal_position": 16
+    },
+    {
+     "dflt": null,
+     "type": "varchar(50)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "external_source",
+     "ordinal_position": 17
+    },
+    {
+     "dflt": null,
+     "type": "varchar(150)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "external_ref",
+     "ordinal_position": 18
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "verified_at",
+     "ordinal_position": 19
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "verified_by",
+     "ordinal_position": 20
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "created_by",
+     "ordinal_position": 21
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "created_at",
+     "ordinal_position": 22
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "updated_at",
+     "ordinal_position": 23
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "organizations",
+     "column_name": "deleted_at",
+     "ordinal_position": 24
+    }
+   ]
+  },
+  "password_histories": {
+   "comment": "FR-AUTH-027 — سجل كلمات المرور السابقة (hash فقط)",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "password_histories",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "password_histories",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "password_histories",
+     "column_name": "password_hash",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": "CURRENT_TIMESTAMP",
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "password_histories",
+     "column_name": "created_at",
+     "ordinal_position": 4
+    }
+   ]
+  },
+  "permissions": {
+   "comment": "",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "name",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "guard_name",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(50)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "resource",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(50)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "action",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "display_name",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "internal",
+     "type": "varchar(20)",
+     "comment": "public | internal | personal | sensitive | restricted",
+     "nullable": false,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "sensitivity",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "NFR-SEC-002",
+     "nullable": false,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "requires_mfa",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "created_at",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "permissions",
+     "column_name": "updated_at",
+     "ordinal_position": 10
+    }
+   ]
+  },
+  "personal_access_tokens": {
+   "comment": "Laravel Sanctum tokens",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "tokenable_type",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "tokenable_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "name",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(64)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "token",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "abilities",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "last_used_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "expires_at",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "created_at",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "personal_access_tokens",
+     "column_name": "updated_at",
+     "ordinal_position": 10
+    }
+   ]
+  },
+  "region_policies": {
+   "comment": "FR-AUTH-034/035 — سياسات الوصول حسب الدولة/المنطقة (country=null & region=null = افتراضي عام)",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(80)",
+     "comment": "مثل courses.free_access | payments.enabled | registration.allowed",
+     "nullable": false,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "policy_key",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "country_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "region_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "قيمة السياسة (bool/number/object)",
+     "nullable": false,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "value",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "is_active",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "effective_from",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "effective_to",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "created_by",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "updated_by",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "created_at",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "region_policies",
+     "column_name": "updated_at",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "varchar(120) (virtual)",
+     "comment": null,
+     "nullable": true,
+     "generated": "concat(`policy_key`,_utf8mb4\\':\\',ifnull(`country_id`,0),_utf8mb4\\':\\',ifnull(`region_id`,0))",
+     "table_name": "region_policies",
+     "column_name": "scope_key",
+     "ordinal_position": 13
+    }
+   ]
+  },
+  "regions": {
+   "comment": "FR-AUTH-031 — المناطق (هرمية)",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "country_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "parent_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": "governorate",
+     "type": "varchar(30)",
+     "comment": "governorate | district | city | state",
+     "nullable": false,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "type",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(20)",
+     "comment": "ISO 3166-2 مثل SY-DI",
+     "nullable": true,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "code",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "name",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "is_active",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "sort_order",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "created_at",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "regions",
+     "column_name": "updated_at",
+     "ordinal_position": 10
+    }
+   ]
+  },
+  "report_exports": {
+   "comment": "FR-ADMIN-012 — طلبات تصدير التقارير",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "uuid",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "user_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(80)",
+     "comment": "users | organizations | learning | donors ...",
+     "nullable": false,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "report_key",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "_utf8mb4\\'{}\\'",
+     "type": "json",
+     "comment": "country/region/program/period — FR-ADMIN-010",
+     "nullable": false,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "filters",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "xlsx",
+     "type": "varchar(10)",
+     "comment": "xlsx | csv | pdf",
+     "nullable": false,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "format",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "queued",
+     "type": "varchar(20)",
+     "comment": "queued | processing | completed | failed | expired",
+     "nullable": false,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "status",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "file_path",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "int unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "row_count",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "error",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "context_id",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "organization_id",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "completed_at",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "expires_at",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "created_at",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "report_exports",
+     "column_name": "updated_at",
+     "ordinal_position": 16
+    }
+   ]
+  },
+  "role_has_permissions": {
+   "comment": "",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "role_has_permissions",
+     "column_name": "permission_id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "role_has_permissions",
+     "column_name": "role_id",
+     "ordinal_position": 2
+    }
+   ]
+  },
+  "roles": {
+   "comment": "",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "scope_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "name",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "guard_name",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "context_id",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "{\"ar\":\"…\",\"en\":\"…\"}",
+     "nullable": true,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "display_name",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "description",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "دور إداري — لا يُمنح ذاتيًا (FR-AUTH-005)",
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "is_administrative",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "يُسند تلقائيًا عند التسجيل — FR-AUTH-003",
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "is_self_registrable",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": "يحتاج طلب نوع حساب ومراجعة — FR-AUTH-004",
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "requires_approval",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": "[\"global\",\"country\",\"region\",\"organization\"]",
+     "nullable": true,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "allowed_scope_types",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": "منع التصعيد: لا يُسند دور rank أعلى من رتبة المُسنِد",
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "rank",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "أدوار النظام لا تُحذف ولا يُغيَّر اسمها",
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "is_system",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": "1",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "is_active",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "created_at",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "roles",
+     "column_name": "updated_at",
+     "ordinal_position": 16
+    }
+   ]
+  },
+  "success_stories": {
+   "comment": "FR-ADMIN-007 — قصص النجاح",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "uuid",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "title",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "summary",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "json",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "body",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "subject_user_id",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "organization_id",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "country_id",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "region_id",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": "pending",
+     "type": "varchar(20)",
+     "comment": "not_required | pending | granted | withdrawn",
+     "nullable": false,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "consent_status",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "consent_recorded_at",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "consent_recorded_by",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": "draft",
+     "type": "varchar(20)",
+     "comment": "draft | in_review | published | archived",
+     "nullable": false,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "status",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "published_at",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "created_by",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "reviewed_by",
+     "ordinal_position": 16
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "created_at",
+     "ordinal_position": 17
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "updated_at",
+     "ordinal_position": 18
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "success_stories",
+     "column_name": "deleted_at",
+     "ordinal_position": 19
+    }
+   ]
+  },
+  "ui_translations": {
+   "comment": "FR-I18N-007/008 — ترجمات الواجهة والرسائل",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "varchar(50)",
+     "comment": "validation | errors | notifications | emails | frontend",
+     "nullable": false,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "group",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(150)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "key",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "language_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "value",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "updated_by",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "created_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "ui_translations",
+     "column_name": "updated_at",
+     "ordinal_position": 8
+    }
+   ]
+  },
+  "user_contexts": {
+   "comment": "FR-AUTH-016/017 — سياقات المستخدم",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "context_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": "active",
+     "type": "varchar(20)",
+     "comment": "active | pending | suspended | revoked",
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "status",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": "السياق الافتراضي عند الدخول",
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "is_default",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "activated_at",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "deactivated_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "granted_by",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "created_at",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_contexts",
+     "column_name": "updated_at",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned (virtual)",
+     "comment": "مولّد — سياق افتراضي واحد لكل مستخدم",
+     "nullable": true,
+     "generated": "if(`is_default`,`user_id`,NULL)",
+     "table_name": "user_contexts",
+     "column_name": "default_user_key",
+     "ordinal_position": 11
+    }
+   ]
+  },
+  "user_languages": {
+   "comment": "FR-I18N-004 — كفاءة المستخدم اللغوية",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "language_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(10)",
+     "comment": "A1 | A2 | B1 | B2 | C1 | C2 | native",
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "proficiency",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "is_native",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": "self_declared",
+     "type": "varchar(20)",
+     "comment": "self_declared | assessed | certified",
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "source",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "verified_at",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "created_at",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_languages",
+     "column_name": "updated_at",
+     "ordinal_position": 9
+    }
+   ]
+  },
+  "user_region_changes": {
+   "comment": "FR-AUTH-036 — طلبات/سجل تغيير منطقة المستخدم",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "old_country_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "old_region_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "new_country_id",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "new_region_id",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "reason",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "pending",
+     "type": "varchar(20)",
+     "comment": "pending | approved | rejected | applied",
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "status",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "requested_by",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "reviewed_by",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "reviewed_at",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "created_at",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_region_changes",
+     "column_name": "updated_at",
+     "ordinal_position": 13
+    }
+   ]
+  },
+  "user_sessions": {
+   "comment": "FR-AUTH-024/025 — جلسات المستخدم",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "personal_access_token_id",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "active_context_id",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "active_scope_id",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "varchar(150)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "device_name",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "varchar(20)",
+     "comment": "web | pwa | android | ios",
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "platform",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "varchar(45)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "ip_address",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "user_agent",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "last_activity_at",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "expires_at",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "revoked_at",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "revoked_by",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": "logout | admin_terminated | password_changed | expired | security",
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "revoke_reason",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "created_at",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "user_sessions",
+     "column_name": "updated_at",
+     "ordinal_position": 16
+    }
+   ]
+  },
+  "users": {
+   "comment": "FR-AUTH-001.. — هوية المستخدم (بدون أدوار)",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "char(36)",
+     "comment": "المعرف العام في الـ API (لا نكشف id)",
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "uuid",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(100)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "first_name",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(100)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "last_name",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(150)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "display_name",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": "فريد — collation utf8mb4_unicode_ci لا يفرّق بين الأحرف — FR-AUTH-008",
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "email",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": null,
+     "type": "varchar(20)",
+     "comment": "صيغة E.164 — فريد — FR-AUTH-008",
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "phone",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "password",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "avatar_path",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "date",
+     "comment": "بيانات شخصية حساسة — أساس نموذج العمر/القاصرين (FR-CHILD لاحقًا)",
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "birth_date",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": "pending_verification",
+     "type": "varchar(30)",
+     "comment": "pending_verification | active | suspended | blocked | closed",
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "status",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "status_changed_at",
+     "ordinal_position": 12
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "email_verified_at",
+     "ordinal_position": 13
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "phone_verified_at",
+     "ordinal_position": 14
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "interface_language_id",
+     "ordinal_position": 15
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "country_id",
+     "ordinal_position": 16
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "region_id",
+     "ordinal_position": 17
+    },
+    {
+     "dflt": "UTC",
+     "type": "varchar(64)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "timezone",
+     "ordinal_position": 18
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": "مشفّر (encrypted cast)",
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "two_factor_secret",
+     "ordinal_position": 19
+    },
+    {
+     "dflt": null,
+     "type": "text",
+     "comment": "مشفّر",
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "two_factor_recovery_codes",
+     "ordinal_position": 20
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "two_factor_confirmed_at",
+     "ordinal_position": 21
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "password_changed_at",
+     "ordinal_position": 22
+    },
+    {
+     "dflt": "0",
+     "type": "boolean",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "must_change_password",
+     "ordinal_position": 23
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "failed_login_count",
+     "ordinal_position": 24
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "locked_until",
+     "ordinal_position": 25
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "last_login_at",
+     "ordinal_position": 26
+    },
+    {
+     "dflt": null,
+     "type": "varchar(45)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "last_login_ip",
+     "ordinal_position": 27
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "created_by",
+     "ordinal_position": 28
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "created_at",
+     "ordinal_position": 29
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "updated_at",
+     "ordinal_position": 30
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": "لا حذف فعلي — FR-AUTH-007/030",
+     "nullable": true,
+     "generated": null,
+     "table_name": "users",
+     "column_name": "deleted_at",
+     "ordinal_position": 31
+    }
+   ]
+  },
+  "verification_codes": {
+   "comment": "FR-AUTH-010/011 — رموز التحقق واستعادة كلمة المرور",
+   "columns": [
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "id",
+     "ordinal_position": 1
+    },
+    {
+     "dflt": null,
+     "type": "bigint unsigned",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "user_id",
+     "ordinal_position": 2
+    },
+    {
+     "dflt": null,
+     "type": "varchar(10)",
+     "comment": "email | sms | whatsapp",
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "channel",
+     "ordinal_position": 3
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": "البريد/الهاتف وقت الإرسال",
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "destination",
+     "ordinal_position": 4
+    },
+    {
+     "dflt": null,
+     "type": "varchar(30)",
+     "comment": "email_verification | phone_verification | password_reset | mfa_login | contact_change",
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "purpose",
+     "ordinal_position": 5
+    },
+    {
+     "dflt": null,
+     "type": "varchar(255)",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "code_hash",
+     "ordinal_position": 6
+    },
+    {
+     "dflt": "0",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "attempts",
+     "ordinal_position": 7
+    },
+    {
+     "dflt": "5",
+     "type": "smallint unsigned",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "max_attempts",
+     "ordinal_position": 8
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "expires_at",
+     "ordinal_position": 9
+    },
+    {
+     "dflt": null,
+     "type": "timestamp",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "consumed_at",
+     "ordinal_position": 10
+    },
+    {
+     "dflt": null,
+     "type": "varchar(45)",
+     "comment": null,
+     "nullable": true,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "ip_address",
+     "ordinal_position": 11
+    },
+    {
+     "dflt": "CURRENT_TIMESTAMP",
+     "type": "timestamp",
+     "comment": null,
+     "nullable": false,
+     "generated": null,
+     "table_name": "verification_codes",
+     "column_name": "created_at",
+     "ordinal_position": 12
+    }
+   ]
+  }
+ },
+ "fks": [
+  {
+   "on_delete": "r",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "access_scopes",
+   "column_name": "country_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "access_scopes",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "access_scopes",
+   "column_name": "region_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "account_status_histories",
+   "column_name": "changed_by"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "account_status_histories",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "access_scopes",
+   "ref_column": "id",
+   "table_name": "account_type_requests",
+   "column_name": "granted_scope_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "account_type_requests",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "account_type_requests",
+   "column_name": "region_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "roles",
+   "ref_column": "id",
+   "table_name": "account_type_requests",
+   "column_name": "requested_role_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "account_type_requests",
+   "column_name": "reviewed_by"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "account_type_requests",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "contexts",
+   "ref_column": "id",
+   "table_name": "activity_log",
+   "column_name": "context_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "activity_log",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "auth_events",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "languages",
+   "ref_column": "id",
+   "table_name": "countries",
+   "column_name": "default_language_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "languages",
+   "ref_column": "id",
+   "table_name": "language_requirements",
+   "column_name": "language_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "metric_snapshots",
+   "column_name": "country_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "metric_snapshots",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "metric_snapshots",
+   "column_name": "region_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "permissions",
+   "ref_column": "id",
+   "table_name": "model_has_permissions",
+   "column_name": "permission_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "access_scopes",
+   "ref_column": "id",
+   "table_name": "model_has_permissions",
+   "column_name": "scope_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "model_has_roles",
+   "column_name": "granted_by"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "roles",
+   "ref_column": "id",
+   "table_name": "model_has_roles",
+   "column_name": "role_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "access_scopes",
+   "ref_column": "id",
+   "table_name": "model_has_roles",
+   "column_name": "scope_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "notification_channels",
+   "ref_column": "id",
+   "table_name": "notification_deliveries",
+   "column_name": "channel_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "notification_types",
+   "ref_column": "id",
+   "table_name": "notification_deliveries",
+   "column_name": "notification_type_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "notification_templates",
+   "ref_column": "id",
+   "table_name": "notification_deliveries",
+   "column_name": "template_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "notification_deliveries",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "notification_channels",
+   "ref_column": "id",
+   "table_name": "notification_preferences",
+   "column_name": "channel_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "notification_preferences",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "notification_channels",
+   "ref_column": "id",
+   "table_name": "notification_templates",
+   "column_name": "channel_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "languages",
+   "ref_column": "id",
+   "table_name": "notification_templates",
+   "column_name": "language_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "notification_types",
+   "ref_column": "id",
+   "table_name": "notification_templates",
+   "column_name": "notification_type_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "notification_templates",
+   "column_name": "updated_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "organizations",
+   "column_name": "country_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "organizations",
+   "column_name": "created_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "organizations",
+   "column_name": "region_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "organizations",
+   "column_name": "verified_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "organization_invitations",
+   "column_name": "accepted_by"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "organization_invitations",
+   "column_name": "invited_by"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "organization_invitations",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "roles",
+   "ref_column": "id",
+   "table_name": "organization_invitations",
+   "column_name": "role_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "organization_memberships",
+   "column_name": "added_by"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "organization_memberships",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "organization_memberships",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "password_histories",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "regions",
+   "column_name": "country_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "regions",
+   "column_name": "parent_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "region_policies",
+   "column_name": "country_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "region_policies",
+   "column_name": "created_by"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "region_policies",
+   "column_name": "region_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "region_policies",
+   "column_name": "updated_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "contexts",
+   "ref_column": "id",
+   "table_name": "report_exports",
+   "column_name": "context_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "report_exports",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "report_exports",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "contexts",
+   "ref_column": "id",
+   "table_name": "roles",
+   "column_name": "context_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "access_scopes",
+   "ref_column": "id",
+   "table_name": "roles",
+   "column_name": "scope_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "permissions",
+   "ref_column": "id",
+   "table_name": "role_has_permissions",
+   "column_name": "permission_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "roles",
+   "ref_column": "id",
+   "table_name": "role_has_permissions",
+   "column_name": "role_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "success_stories",
+   "column_name": "consent_recorded_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "success_stories",
+   "column_name": "country_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "success_stories",
+   "column_name": "created_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "organizations",
+   "ref_column": "id",
+   "table_name": "success_stories",
+   "column_name": "organization_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "success_stories",
+   "column_name": "region_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "success_stories",
+   "column_name": "reviewed_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "success_stories",
+   "column_name": "subject_user_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "languages",
+   "ref_column": "id",
+   "table_name": "ui_translations",
+   "column_name": "language_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "ui_translations",
+   "column_name": "updated_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "users",
+   "column_name": "country_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "users",
+   "column_name": "created_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "languages",
+   "ref_column": "id",
+   "table_name": "users",
+   "column_name": "interface_language_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "users",
+   "column_name": "region_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "contexts",
+   "ref_column": "id",
+   "table_name": "user_contexts",
+   "column_name": "context_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_contexts",
+   "column_name": "granted_by"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_contexts",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "languages",
+   "ref_column": "id",
+   "table_name": "user_languages",
+   "column_name": "language_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_languages",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "user_region_changes",
+   "column_name": "new_country_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "user_region_changes",
+   "column_name": "new_region_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "countries",
+   "ref_column": "id",
+   "table_name": "user_region_changes",
+   "column_name": "old_country_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "regions",
+   "ref_column": "id",
+   "table_name": "user_region_changes",
+   "column_name": "old_region_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_region_changes",
+   "column_name": "requested_by"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_region_changes",
+   "column_name": "reviewed_by"
+  },
+  {
+   "on_delete": "r",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_region_changes",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "contexts",
+   "ref_column": "id",
+   "table_name": "user_sessions",
+   "column_name": "active_context_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "access_scopes",
+   "ref_column": "id",
+   "table_name": "user_sessions",
+   "column_name": "active_scope_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "personal_access_tokens",
+   "ref_column": "id",
+   "table_name": "user_sessions",
+   "column_name": "personal_access_token_id"
+  },
+  {
+   "on_delete": "n",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_sessions",
+   "column_name": "revoked_by"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "user_sessions",
+   "column_name": "user_id"
+  },
+  {
+   "on_delete": "c",
+   "ref_table": "users",
+   "ref_column": "id",
+   "table_name": "verification_codes",
+   "column_name": "user_id"
+  }
+ ],
+ "unique": [
+  {
+   "columns": "target_key",
+   "indexname": "access_scopes_target_unique",
+   "table_name": "access_scopes"
+  },
+  {
+   "columns": "uuid",
+   "indexname": "account_type_requests_uuid_unique",
+   "table_name": "account_type_requests"
+  },
+  {
+   "columns": "open_request_key",
+   "indexname": "atr_one_open_per_role",
+   "table_name": "account_type_requests"
+  },
+  {
+   "columns": "key",
+   "indexname": "contexts_key_unique",
+   "table_name": "contexts"
+  },
+  {
+   "columns": "iso2",
+   "indexname": "countries_iso2_unique",
+   "table_name": "countries"
+  },
+  {
+   "columns": "iso3",
+   "indexname": "countries_iso3_unique",
+   "table_name": "countries"
+  },
+  {
+   "columns": "uuid",
+   "indexname": "failed_jobs_uuid_unique",
+   "table_name": "failed_jobs"
+  },
+  {
+   "columns": "requirable_type,requirable_id,language_id",
+   "indexname": "lang_req_requirable_lang_unique",
+   "table_name": "language_requirements"
+  },
+  {
+   "columns": "code",
+   "indexname": "languages_code_unique",
+   "table_name": "languages"
+  },
+  {
+   "columns": "snapshot_key",
+   "indexname": "metric_snapshots_unique",
+   "table_name": "metric_snapshots"
+  },
+  {
+   "columns": "key",
+   "indexname": "notification_channels_key_unique",
+   "table_name": "notification_channels"
+  },
+  {
+   "columns": "user_id,category,channel_id",
+   "indexname": "notification_preferences_user_id_category_channel_id_unique",
+   "table_name": "notification_preferences"
+  },
+  {
+   "columns": "notification_type_id,channel_id,language_id,version",
+   "indexname": "notif_tpl_unique",
+   "table_name": "notification_templates"
+  },
+  {
+   "columns": "key",
+   "indexname": "notification_types_key_unique",
+   "table_name": "notification_types"
+  },
+  {
+   "columns": "token_hash",
+   "indexname": "organization_invitations_token_hash_unique",
+   "table_name": "organization_invitations"
+  },
+  {
+   "columns": "organization_id,user_id",
+   "indexname": "organization_memberships_organization_id_user_id_unique",
+   "table_name": "organization_memberships"
+  },
+  {
+   "columns": "external_source,external_ref",
+   "indexname": "organizations_external_source_external_ref_unique",
+   "table_name": "organizations"
+  },
+  {
+   "columns": "slug",
+   "indexname": "organizations_slug_unique",
+   "table_name": "organizations"
+  },
+  {
+   "columns": "uuid",
+   "indexname": "organizations_uuid_unique",
+   "table_name": "organizations"
+  },
+  {
+   "columns": "name,guard_name",
+   "indexname": "permissions_name_guard_name_unique",
+   "table_name": "permissions"
+  },
+  {
+   "columns": "token",
+   "indexname": "personal_access_tokens_token_unique",
+   "table_name": "personal_access_tokens"
+  },
+  {
+   "columns": "scope_key",
+   "indexname": "region_policies_scope_unique",
+   "table_name": "region_policies"
+  },
+  {
+   "columns": "country_id,code",
+   "indexname": "regions_country_id_code_unique",
+   "table_name": "regions"
+  },
+  {
+   "columns": "uuid",
+   "indexname": "report_exports_uuid_unique",
+   "table_name": "report_exports"
+  },
+  {
+   "columns": "scope_id,name,guard_name",
+   "indexname": "roles_scope_id_name_guard_name_unique",
+   "table_name": "roles"
+  },
+  {
+   "columns": "uuid",
+   "indexname": "success_stories_uuid_unique",
+   "table_name": "success_stories"
+  },
+  {
+   "columns": "group,key,language_id",
+   "indexname": "ui_translations_group_key_language_id_unique",
+   "table_name": "ui_translations"
+  },
+  {
+   "columns": "default_user_key",
+   "indexname": "user_contexts_one_default",
+   "table_name": "user_contexts"
+  },
+  {
+   "columns": "user_id,context_id",
+   "indexname": "user_contexts_user_id_context_id_unique",
+   "table_name": "user_contexts"
+  },
+  {
+   "columns": "user_id,language_id",
+   "indexname": "user_languages_user_id_language_id_unique",
+   "table_name": "user_languages"
+  },
+  {
+   "columns": "personal_access_token_id",
+   "indexname": "user_sessions_personal_access_token_id_unique",
+   "table_name": "user_sessions"
+  },
+  {
+   "columns": "email",
+   "indexname": "users_email_unique",
+   "table_name": "users"
+  },
+  {
+   "columns": "phone",
+   "indexname": "users_phone_unique",
+   "table_name": "users"
+  },
+  {
+   "columns": "uuid",
+   "indexname": "users_uuid_unique",
+   "table_name": "users"
+  }
+ ],
+ "checks": [
+  {
+   "def": "(`direction` in (_utf8mb4\\'rtl\\',_utf8mb4\\'ltr\\'))",
+   "conname": "languages_direction_check",
+   "table_name": "languages"
+  },
+  {
+   "def": "((`email` is not null) or (`phone` is not null))",
+   "conname": "users_contact_required",
+   "table_name": "users"
+  },
+  {
+   "def": "(`status` in (_utf8mb4\\'pending_verification\\',_utf8mb4\\'active\\',_utf8mb4\\'suspended\\',_utf8mb4\\'blocked\\',_utf8mb4\\'closed\\'))",
+   "conname": "users_status_check",
+   "table_name": "users"
+  },
+  {
+   "def": "((`email` is not null) or (`phone` is not null))",
+   "conname": "org_inv_contact_required",
+   "table_name": "organization_invitations"
+  },
+  {
+   "def": "(((`type` = _utf8mb4\\'global\\') and (`country_id` is null) and (`region_id` is null) and (`organization_id` is null)) or ((`type` = _utf8mb4\\'country\\') and (`country_id` is not null) and (`region_id` is null) and (`organization_id` is null)) or ((`type` = _utf8mb4\\'region\\') and (`region_id` is not null) and (`organization_id` is null)) or ((`type` = _utf8mb4\\'organization\\') and (`organization_id` is not null)))",
+   "conname": "access_scopes_shape_check",
+   "table_name": "access_scopes"
+  },
+  {
+   "def": "(`sensitivity` in (_utf8mb4\\'public\\',_utf8mb4\\'internal\\',_utf8mb4\\'personal\\',_utf8mb4\\'sensitive\\',_utf8mb4\\'restricted\\'))",
+   "conname": "permissions_sensitivity_check",
+   "table_name": "permissions"
+  },
+  {
+   "def": "((`granted_by` is null) or (`granted_by` <> `model_id`))",
+   "conname": "model_has_roles_no_self_grant",
+   "table_name": "model_has_roles"
+  },
+  {
+   "def": "((`reviewed_by` is null) or (`reviewed_by` <> `user_id`))",
+   "conname": "atr_no_self_review",
+   "table_name": "account_type_requests"
+  },
+  {
+   "def": "((`status` <> _utf8mb4\\'published\\') or (`consent_status` in (_utf8mb4\\'granted\\',_utf8mb4\\'not_required\\')))",
+   "conname": "success_stories_publish_requires_consent",
+   "table_name": "success_stories"
+  }
+ ],
+ "triggers": [
+  {
+   "name": "activity_log_block_update",
+   "event": "UPDATE",
+   "table": "activity_log"
+  },
+  {
+   "name": "activity_log_block_delete",
+   "event": "DELETE",
+   "table": "activity_log"
+  }
+ ]
+}
