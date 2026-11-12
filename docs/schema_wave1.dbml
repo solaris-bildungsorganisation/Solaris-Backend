@@ -1,0 +1,700 @@
+// Solaris Platform — Wave 1 schema (AUTH · I18N · ORG · ADMIN · COM) — MySQL 8
+// Generated from the live MySQL schema built by the Laravel migrations.
+
+Project solaris { database_type: 'MySQL' }
+
+TableGroup "Identity" {
+  users
+  password_histories
+  account_status_histories
+}
+
+TableGroup "RBAC" {
+  contexts
+  roles
+  permissions
+  role_has_permissions
+  model_has_roles
+  model_has_permissions
+  access_scopes
+  user_contexts
+  account_type_requests
+}
+
+TableGroup "Sessions & Security" {
+  personal_access_tokens
+  user_sessions
+  verification_codes
+  auth_events
+}
+
+TableGroup "Geo & Region policy" {
+  countries
+  regions
+  region_policies
+  user_region_changes
+}
+
+TableGroup "I18N" {
+  languages
+  user_languages
+  language_requirements
+  ui_translations
+}
+
+TableGroup "ORG" {
+  organizations
+  organization_memberships
+  organization_invitations
+}
+
+TableGroup "COM" {
+  notification_channels
+  notification_types
+  notification_templates
+  notification_preferences
+  notifications
+  notification_deliveries
+}
+
+TableGroup "ADMIN & Audit" {
+  activity_log
+  metric_snapshots
+  report_exports
+  success_stories
+}
+
+Table access_scopes [headercolor: #1F2937, note: 'FR-AUTH-014 — نطاقات الوصول (فريق spatie)'] {
+  id "bigint unsigned" [pk, not null]
+  type varchar(20) [not null, note: 'global | country | region | organization']
+  country_id "bigint unsigned"
+  region_id "bigint unsigned"
+  organization_id "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+  target_key varchar(80)
+}
+
+Table account_status_histories [headercolor: #1F2937, note: 'FR-AUTH-007/012/013/023 — سجل حالات الحساب'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned" [not null]
+  from_status varchar(30)
+  to_status varchar(30) [not null]
+  reason text
+  changed_by "bigint unsigned"
+  created_at timestamp [not null]
+}
+
+Table account_type_requests [headercolor: #1F2937, note: 'FR-AUTH-002/004 — طلبات نوع الحساب'] {
+  id "bigint unsigned" [pk, not null]
+  uuid char(36) [not null]
+  user_id "bigint unsigned" [not null]
+  requested_role_id "bigint unsigned" [not null]
+  organization_id "bigint unsigned"
+  region_id "bigint unsigned"
+  purpose text [not null, note: 'الغرض من الطلب — FR-AUTH-004']
+  attachments json [note: 'مسارات ملفات داعمة']
+  status varchar(20) [not null, note: 'pending | under_review | approved | rejected | cancelled']
+  reviewed_by "bigint unsigned"
+  reviewed_at timestamp
+  review_note text
+  granted_scope_id "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+  open_request_key varchar(60) [note: 'مولّد — طلب مفتوح واحد لكل دور']
+}
+
+Table activity_log [headercolor: #1F2937, note: 'FR-ADMIN-011 · NFR-SEC-007 — سجل تدقيق غير قابل للتعديل'] {
+  id "bigint unsigned" [pk, not null]
+  log_name varchar(255) [note: 'auth | rbac | org | admin | security ...']
+  description text [not null]
+  subject_type varchar(255)
+  subject_id "bigint unsigned"
+  event varchar(255)
+  causer_type varchar(255)
+  causer_id "bigint unsigned"
+  properties json [note: 'old/new — بدون كلمات مرور أو أسرار']
+  batch_uuid char(36)
+  session_id char(36)
+  context_id "bigint unsigned"
+  organization_id "bigint unsigned"
+  sensitivity varchar(20) [not null, note: 'internal | personal | sensitive | restricted']
+  ip_address varchar(45)
+  user_agent text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table auth_events [headercolor: #1F2937, note: 'FR-AUTH-024/026 — سجل أحداث الدخول والأمان'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned"
+  session_id char(36)
+  event varchar(40) [not null, note: 'login_succeeded | login_failed | logout | lockout | password_reset_requested | password_reset_completed | password_changed | mfa_enabled | mfa_failed | session_revoked | context_switched']
+  identifier_hash varchar(64) [note: 'sha256 للمعرّف المُدخل عند الفشل — لا نخزن القيمة الخام']
+  ip_address varchar(45)
+  user_agent text
+  metadata json
+  created_at timestamp [not null]
+}
+
+Table contexts [headercolor: #1F2937, note: 'FR-AUTH-016/017 — السياق الوظيفي'] {
+  id "bigint unsigned" [pk, not null]
+  key varchar(50) [not null, note: 'learning | teaching | review | content | mentoring | pss | program_management | recruitment | staff | organization | administration']
+  name json [not null, note: '{"ar":"…","en":"…","de":"…"}']
+  description json
+  is_active boolean [not null]
+  sort_order "smallint unsigned" [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table countries [headercolor: #1F2937, note: 'FR-AUTH-031 — الدول'] {
+  id "bigint unsigned" [pk, not null]
+  iso2 char(2) [not null]
+  iso3 char(3)
+  name json [not null]
+  phone_code varchar(8) [note: '+963']
+  default_language_id "bigint unsigned"
+  policy_group varchar(30) [not null, note: 'مجموعة السياسة: syria | stable_market | standard — FR-AUTH-033/034']
+  is_active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table language_requirements [headercolor: #1F2937, note: 'FR-I18N-006 — متطلبات اللغة للبرنامج/الدورة/الفرصة'] {
+  id "bigint unsigned" [pk, not null]
+  requirable_type varchar(255) [not null]
+  requirable_id "bigint unsigned" [not null]
+  language_id "bigint unsigned" [not null]
+  min_proficiency varchar(10)
+  is_mandatory boolean [not null]
+  purpose varchar(20) [not null, note: 'instruction | prerequisite']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table languages [headercolor: #1F2937, note: 'FR-I18N-001/007/009 — اللغات المدعومة'] {
+  id "bigint unsigned" [pk, not null]
+  code varchar(10) [not null, note: 'BCP-47: ar, en, de']
+  name json [not null, note: 'ترجمات الاسم {"ar":"العربية","en":"Arabic"}']
+  native_name varchar(100) [not null]
+  direction varchar(3) [not null, note: 'rtl | ltr']
+  is_interface boolean [not null, note: 'متاحة كلغة واجهة']
+  is_content boolean [not null, note: 'متاحة كلغة محتوى']
+  is_active boolean [not null]
+  sort_order "smallint unsigned" [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table metric_snapshots [headercolor: #1F2937, note: 'FR-ADMIN-002..010 · FR-ORG-004 — مؤشرات مجمّعة'] {
+  id "bigint unsigned" [pk, not null]
+  metric_key varchar(80) [not null, note: 'users.registered | users.active | orgs.active | enrollments.completed ...']
+  period_type varchar(10) [not null, note: 'day | week | month | quarter | year']
+  period_start date [not null]
+  period_end date [not null]
+  country_id "bigint unsigned"
+  region_id "bigint unsigned"
+  organization_id "bigint unsigned"
+  dimensions json [not null, note: 'أبعاد إضافية (program_id لاحقًا...)']
+  dimensions_hash varchar(64) [not null]
+  value decimal(18,4) [not null]
+  computed_at timestamp [not null]
+  snapshot_key varchar(255)
+}
+
+Table model_has_permissions [headercolor: #1F2937, note: ''] {
+  permission_id "bigint unsigned" [pk, not null]
+  model_type varchar(255) [pk, not null]
+  model_id "bigint unsigned" [pk, not null]
+  scope_id "bigint unsigned" [pk, not null]
+}
+
+Table model_has_roles [headercolor: #1F2937, note: ''] {
+  role_id "bigint unsigned" [pk, not null]
+  model_type varchar(255) [pk, not null]
+  model_id "bigint unsigned" [pk, not null]
+  scope_id "bigint unsigned" [pk, not null]
+  granted_by "bigint unsigned"
+  grant_reason varchar(255)
+  expires_at timestamp [note: 'Job مجدول يزيل الإسنادات المنتهية']
+  created_at timestamp [not null]
+}
+
+Table notification_channels [headercolor: #1F2937, note: 'FR-COM-009 — قنوات الإرسال'] {
+  id "bigint unsigned" [pk, not null]
+  key varchar(30) [not null, note: 'in_app | email | sms | push | whatsapp']
+  name json [not null]
+  driver varchar(50) [not null, note: 'اسم الـ adapter في الكود']
+  supports_sensitive boolean [not null, note: 'هل القناة مناسبة لمحتوى حساس — FR-COM-008']
+  is_active boolean [not null]
+  config json [note: 'إعدادات غير سرية فقط (الأسرار في .env)']
+  sort_order "smallint unsigned" [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notification_deliveries [headercolor: #1F2937, note: 'FR-COM-008/009 — حالة كل محاولة إرسال'] {
+  id "bigint unsigned" [pk, not null]
+  notification_uuid char(36) [not null, note: 'معرّف Notification في Laravel']
+  user_id "bigint unsigned" [not null]
+  notification_type_id "bigint unsigned"
+  channel_id "bigint unsigned" [not null]
+  template_id "bigint unsigned"
+  status varchar(30) [not null, note: 'queued | sent | delivered | failed | skipped_preference | skipped_sensitivity']
+  attempts "smallint unsigned" [not null]
+  provider varchar(50)
+  provider_message_id varchar(255)
+  last_error text
+  sent_at timestamp
+  delivered_at timestamp
+  failed_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notification_preferences [headercolor: #1F2937, note: 'FR-COM-007 — تفضيلات الإشعارات'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned" [not null]
+  category varchar(30) [not null]
+  channel_id "bigint unsigned" [not null]
+  is_enabled boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notification_templates [headercolor: #1F2937, note: 'قوالب الإشعارات لكل نوع × قناة × لغة'] {
+  id "bigint unsigned" [pk, not null]
+  notification_type_id "bigint unsigned" [not null]
+  channel_id "bigint unsigned" [not null]
+  language_id "bigint unsigned" [not null]
+  subject varchar(255)
+  body text [not null, note: 'متغيرات بصيغة {{ name }}']
+  version "int unsigned" [not null]
+  is_active boolean [not null]
+  updated_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notification_types [headercolor: #1F2937, note: 'FR-COM-001..006 — كتالوج أحداث الإشعارات'] {
+  id "bigint unsigned" [pk, not null]
+  key varchar(80) [not null, note: 'مثل enrollment.accepted | session.reminder | security.new_login']
+  category varchar(30) [not null, note: 'account | enrollment | session | result | certificate | job | finance | admin | security']
+  name json [not null]
+  description json
+  sensitivity varchar(20) [not null, note: 'public | personal | sensitive']
+  is_mandatory boolean [not null, note: 'لا يمكن تعطيله من التفضيلات (أمني/إداري)']
+  default_channels json [not null]
+  is_active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notifications [headercolor: #1F2937, note: 'إشعارات داخل التطبيق (Laravel database channel)'] {
+  id char(36) [pk, not null]
+  type varchar(255) [not null]
+  notifiable_type varchar(255) [not null]
+  notifiable_id "bigint unsigned" [not null]
+  data json [not null]
+  read_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table organization_invitations [headercolor: #1F2937, note: 'FR-ORG-002 — دعوات الانضمام للمؤسسة'] {
+  id "bigint unsigned" [pk, not null]
+  organization_id "bigint unsigned" [not null]
+  email varchar(255)
+  phone varchar(20)
+  membership_type varchar(30) [not null]
+  role_id "bigint unsigned"
+  token_hash varchar(64) [not null]
+  status varchar(20) [not null, note: 'pending | accepted | expired | revoked']
+  invited_by "bigint unsigned" [not null]
+  accepted_by "bigint unsigned"
+  expires_at timestamp [not null]
+  accepted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table organization_memberships [headercolor: #1F2937, note: 'FR-AUTH-015 · FR-ORG-002/006 — عضوية المستخدم في المؤسسة'] {
+  id "bigint unsigned" [pk, not null]
+  organization_id "bigint unsigned" [not null]
+  user_id "bigint unsigned" [not null]
+  membership_type varchar(30) [not null, note: 'member | staff | learner | instructor | employer_representative | partner_contact | volunteer — FR-ORG-006']
+  status varchar(20) [not null, note: 'pending | active | suspended | left | removed']
+  title varchar(150) [note: 'المسمى داخل المؤسسة']
+  joined_at timestamp
+  left_at timestamp
+  added_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table organizations [headercolor: #1F2937, note: 'FR-ORG-001/005/007 — الحسابات المؤسسية'] {
+  id "bigint unsigned" [pk, not null]
+  uuid char(36) [not null]
+  name json [not null]
+  slug varchar(150) [not null]
+  type varchar(30) [not null, note: 'educational | training_center | ngo | employer | donor | government | partner | other — FR-ORG-005']
+  status varchar(20) [not null, note: 'pending | active | suspended | archived']
+  country_id "bigint unsigned"
+  region_id "bigint unsigned"
+  registration_number varchar(100)
+  email varchar(255)
+  phone varchar(20)
+  website varchar(255)
+  address text
+  logo_path varchar(255)
+  description json
+  settings json [not null]
+  external_source varchar(50)
+  external_ref varchar(150)
+  verified_at timestamp
+  verified_by "bigint unsigned"
+  created_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table password_histories [headercolor: #1F2937, note: 'FR-AUTH-027 — سجل كلمات المرور السابقة (hash فقط)'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned" [not null]
+  password_hash varchar(255) [not null]
+  created_at timestamp [not null]
+}
+
+Table permissions [headercolor: #1F2937, note: ''] {
+  id "bigint unsigned" [pk, not null]
+  name varchar(255) [not null]
+  guard_name varchar(255) [not null]
+  resource varchar(50)
+  action varchar(50)
+  display_name json
+  sensitivity varchar(20) [not null, note: 'public | internal | personal | sensitive | restricted']
+  requires_mfa boolean [not null, note: 'NFR-SEC-002']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table personal_access_tokens [headercolor: #1F2937, note: 'Laravel Sanctum tokens'] {
+  id "bigint unsigned" [pk, not null]
+  tokenable_type varchar(255) [not null]
+  tokenable_id "bigint unsigned" [not null]
+  name varchar(255) [not null]
+  token varchar(64) [not null]
+  abilities text
+  last_used_at timestamp
+  expires_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table region_policies [headercolor: #1F2937, note: 'FR-AUTH-034/035 — سياسات الوصول حسب الدولة/المنطقة (country=null & region=null = افتراضي عام)'] {
+  id "bigint unsigned" [pk, not null]
+  policy_key varchar(80) [not null, note: 'مثل courses.free_access | payments.enabled | registration.allowed']
+  country_id "bigint unsigned"
+  region_id "bigint unsigned"
+  value json [not null, note: 'قيمة السياسة (bool/number/object)']
+  is_active boolean [not null]
+  effective_from timestamp
+  effective_to timestamp
+  created_by "bigint unsigned"
+  updated_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+  scope_key varchar(120)
+}
+
+Table regions [headercolor: #1F2937, note: 'FR-AUTH-031 — المناطق (هرمية)'] {
+  id "bigint unsigned" [pk, not null]
+  country_id "bigint unsigned" [not null]
+  parent_id "bigint unsigned"
+  type varchar(30) [not null, note: 'governorate | district | city | state']
+  code varchar(20) [note: 'ISO 3166-2 مثل SY-DI']
+  name json [not null]
+  is_active boolean [not null]
+  sort_order "smallint unsigned" [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table report_exports [headercolor: #1F2937, note: 'FR-ADMIN-012 — طلبات تصدير التقارير'] {
+  id "bigint unsigned" [pk, not null]
+  uuid char(36) [not null]
+  user_id "bigint unsigned" [not null]
+  report_key varchar(80) [not null, note: 'users | organizations | learning | donors ...']
+  filters json [not null, note: 'country/region/program/period — FR-ADMIN-010']
+  format varchar(10) [not null, note: 'xlsx | csv | pdf']
+  status varchar(20) [not null, note: 'queued | processing | completed | failed | expired']
+  file_path varchar(255)
+  row_count "int unsigned"
+  error text
+  context_id "bigint unsigned"
+  organization_id "bigint unsigned"
+  completed_at timestamp
+  expires_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table role_has_permissions [headercolor: #1F2937, note: ''] {
+  permission_id "bigint unsigned" [pk, not null]
+  role_id "bigint unsigned" [pk, not null]
+}
+
+Table roles [headercolor: #1F2937, note: ''] {
+  id "bigint unsigned" [pk, not null]
+  scope_id "bigint unsigned"
+  name varchar(255) [not null]
+  guard_name varchar(255) [not null]
+  context_id "bigint unsigned"
+  display_name json [note: '{"ar":"…","en":"…"}']
+  description json
+  is_administrative boolean [not null, note: 'دور إداري — لا يُمنح ذاتيًا (FR-AUTH-005)']
+  is_self_registrable boolean [not null, note: 'يُسند تلقائيًا عند التسجيل — FR-AUTH-003']
+  requires_approval boolean [not null, note: 'يحتاج طلب نوع حساب ومراجعة — FR-AUTH-004']
+  allowed_scope_types json [note: '["global","country","region","organization"]']
+  rank "smallint unsigned" [not null, note: 'منع التصعيد: لا يُسند دور rank أعلى من رتبة المُسنِد']
+  is_system boolean [not null, note: 'أدوار النظام لا تُحذف ولا يُغيَّر اسمها']
+  is_active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table success_stories [headercolor: #1F2937, note: 'FR-ADMIN-007 — قصص النجاح'] {
+  id "bigint unsigned" [pk, not null]
+  uuid char(36) [not null]
+  title json [not null]
+  summary json
+  body json [not null]
+  subject_user_id "bigint unsigned"
+  organization_id "bigint unsigned"
+  country_id "bigint unsigned"
+  region_id "bigint unsigned"
+  consent_status varchar(20) [not null, note: 'not_required | pending | granted | withdrawn']
+  consent_recorded_at timestamp
+  consent_recorded_by "bigint unsigned"
+  status varchar(20) [not null, note: 'draft | in_review | published | archived']
+  published_at timestamp
+  created_by "bigint unsigned" [not null]
+  reviewed_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table ui_translations [headercolor: #1F2937, note: 'FR-I18N-007/008 — ترجمات الواجهة والرسائل'] {
+  id "bigint unsigned" [pk, not null]
+  group varchar(50) [not null, note: 'validation | errors | notifications | emails | frontend']
+  key varchar(150) [not null]
+  language_id "bigint unsigned" [not null]
+  value text [not null]
+  updated_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table user_contexts [headercolor: #1F2937, note: 'FR-AUTH-016/017 — سياقات المستخدم'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned" [not null]
+  context_id "bigint unsigned" [not null]
+  status varchar(20) [not null, note: 'active | pending | suspended | revoked']
+  is_default boolean [not null, note: 'السياق الافتراضي عند الدخول']
+  activated_at timestamp
+  deactivated_at timestamp
+  granted_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+  default_user_key "bigint unsigned" [note: 'مولّد — سياق افتراضي واحد لكل مستخدم']
+}
+
+Table user_languages [headercolor: #1F2937, note: 'FR-I18N-004 — كفاءة المستخدم اللغوية'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned" [not null]
+  language_id "bigint unsigned" [not null]
+  proficiency varchar(10) [not null, note: 'A1 | A2 | B1 | B2 | C1 | C2 | native']
+  is_native boolean [not null]
+  source varchar(20) [not null, note: 'self_declared | assessed | certified']
+  verified_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table user_region_changes [headercolor: #1F2937, note: 'FR-AUTH-036 — طلبات/سجل تغيير منطقة المستخدم'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned" [not null]
+  old_country_id "bigint unsigned"
+  old_region_id "bigint unsigned"
+  new_country_id "bigint unsigned"
+  new_region_id "bigint unsigned"
+  reason text
+  status varchar(20) [not null, note: 'pending | approved | rejected | applied']
+  requested_by "bigint unsigned"
+  reviewed_by "bigint unsigned"
+  reviewed_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table user_sessions [headercolor: #1F2937, note: 'FR-AUTH-024/025 — جلسات المستخدم'] {
+  id char(36) [pk, not null]
+  user_id "bigint unsigned" [not null]
+  personal_access_token_id "bigint unsigned"
+  active_context_id "bigint unsigned"
+  active_scope_id "bigint unsigned"
+  device_name varchar(150)
+  platform varchar(20) [note: 'web | pwa | android | ios']
+  ip_address varchar(45)
+  user_agent text
+  last_activity_at timestamp
+  expires_at timestamp
+  revoked_at timestamp
+  revoked_by "bigint unsigned"
+  revoke_reason varchar(30) [note: 'logout | admin_terminated | password_changed | expired | security']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table users [headercolor: #1F2937, note: 'FR-AUTH-001.. — هوية المستخدم (بدون أدوار)'] {
+  id "bigint unsigned" [pk, not null]
+  uuid char(36) [not null, note: 'المعرف العام في الـ API (لا نكشف id)']
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  display_name varchar(150)
+  email varchar(255) [note: 'فريد — collation utf8mb4_unicode_ci لا يفرّق بين الأحرف — FR-AUTH-008']
+  phone varchar(20) [note: 'صيغة E.164 — فريد — FR-AUTH-008']
+  password varchar(255) [not null]
+  avatar_path varchar(255)
+  birth_date date [note: 'بيانات شخصية حساسة — أساس نموذج العمر/القاصرين (FR-CHILD لاحقًا)']
+  status varchar(30) [not null, note: 'pending_verification | active | suspended | blocked | closed']
+  status_changed_at timestamp
+  email_verified_at timestamp
+  phone_verified_at timestamp
+  interface_language_id "bigint unsigned"
+  country_id "bigint unsigned"
+  region_id "bigint unsigned"
+  timezone varchar(64) [not null]
+  two_factor_secret text [note: 'مشفّر (encrypted cast)']
+  two_factor_recovery_codes text [note: 'مشفّر']
+  two_factor_confirmed_at timestamp
+  password_changed_at timestamp
+  must_change_password boolean [not null]
+  failed_login_count "smallint unsigned" [not null]
+  locked_until timestamp
+  last_login_at timestamp
+  last_login_ip varchar(45)
+  created_by "bigint unsigned"
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'لا حذف فعلي — FR-AUTH-007/030']
+}
+
+Table verification_codes [headercolor: #1F2937, note: 'FR-AUTH-010/011 — رموز التحقق واستعادة كلمة المرور'] {
+  id "bigint unsigned" [pk, not null]
+  user_id "bigint unsigned"
+  channel varchar(10) [not null, note: 'email | sms | whatsapp']
+  destination varchar(255) [not null, note: 'البريد/الهاتف وقت الإرسال']
+  purpose varchar(30) [not null, note: 'email_verification | phone_verification | password_reset | mfa_login | contact_change']
+  code_hash varchar(255) [not null]
+  attempts "smallint unsigned" [not null]
+  max_attempts "smallint unsigned" [not null]
+  expires_at timestamp [not null]
+  consumed_at timestamp
+  ip_address varchar(45)
+  created_at timestamp [not null]
+}
+
+Ref: access_scopes.country_id > countries.id [delete: restrict]
+Ref: access_scopes.organization_id > organizations.id [delete: restrict]
+Ref: access_scopes.region_id > regions.id [delete: restrict]
+Ref: account_status_histories.changed_by > users.id [delete: set null]
+Ref: account_status_histories.user_id > users.id [delete: restrict]
+Ref: account_type_requests.granted_scope_id > access_scopes.id [delete: restrict]
+Ref: account_type_requests.organization_id > organizations.id [delete: set null]
+Ref: account_type_requests.region_id > regions.id [delete: set null]
+Ref: account_type_requests.requested_role_id > roles.id [delete: restrict]
+Ref: account_type_requests.reviewed_by > users.id [delete: restrict]
+Ref: account_type_requests.user_id > users.id [delete: restrict]
+Ref: activity_log.context_id > contexts.id [delete: set null]
+Ref: activity_log.organization_id > organizations.id [delete: set null]
+Ref: auth_events.user_id > users.id [delete: set null]
+Ref: countries.default_language_id > languages.id [delete: set null]
+Ref: language_requirements.language_id > languages.id [delete: restrict]
+Ref: metric_snapshots.country_id > countries.id [delete: cascade]
+Ref: metric_snapshots.organization_id > organizations.id [delete: cascade]
+Ref: metric_snapshots.region_id > regions.id [delete: cascade]
+Ref: model_has_permissions.permission_id > permissions.id [delete: cascade]
+Ref: model_has_permissions.scope_id > access_scopes.id [delete: restrict]
+Ref: model_has_roles.granted_by > users.id [delete: restrict]
+Ref: model_has_roles.role_id > roles.id [delete: cascade]
+Ref: model_has_roles.scope_id > access_scopes.id [delete: restrict]
+Ref: notification_deliveries.channel_id > notification_channels.id [delete: restrict]
+Ref: notification_deliveries.notification_type_id > notification_types.id [delete: set null]
+Ref: notification_deliveries.template_id > notification_templates.id [delete: set null]
+Ref: notification_deliveries.user_id > users.id [delete: cascade]
+Ref: notification_preferences.channel_id > notification_channels.id [delete: cascade]
+Ref: notification_preferences.user_id > users.id [delete: cascade]
+Ref: notification_templates.channel_id > notification_channels.id [delete: restrict]
+Ref: notification_templates.language_id > languages.id [delete: restrict]
+Ref: notification_templates.notification_type_id > notification_types.id [delete: cascade]
+Ref: notification_templates.updated_by > users.id [delete: set null]
+Ref: organization_invitations.accepted_by > users.id [delete: set null]
+Ref: organization_invitations.invited_by > users.id [delete: restrict]
+Ref: organization_invitations.organization_id > organizations.id [delete: cascade]
+Ref: organization_invitations.role_id > roles.id [delete: set null]
+Ref: organization_memberships.added_by > users.id [delete: set null]
+Ref: organization_memberships.organization_id > organizations.id [delete: restrict]
+Ref: organization_memberships.user_id > users.id [delete: restrict]
+Ref: organizations.country_id > countries.id [delete: set null]
+Ref: organizations.created_by > users.id [delete: set null]
+Ref: organizations.region_id > regions.id [delete: set null]
+Ref: organizations.verified_by > users.id [delete: set null]
+Ref: password_histories.user_id > users.id [delete: cascade]
+Ref: region_policies.country_id > countries.id [delete: cascade]
+Ref: region_policies.created_by > users.id [delete: set null]
+Ref: region_policies.region_id > regions.id [delete: cascade]
+Ref: region_policies.updated_by > users.id [delete: set null]
+Ref: regions.country_id > countries.id [delete: restrict]
+Ref: regions.parent_id > regions.id [delete: restrict]
+Ref: report_exports.context_id > contexts.id [delete: set null]
+Ref: report_exports.organization_id > organizations.id [delete: set null]
+Ref: report_exports.user_id > users.id [delete: restrict]
+Ref: role_has_permissions.permission_id > permissions.id [delete: cascade]
+Ref: role_has_permissions.role_id > roles.id [delete: cascade]
+Ref: roles.context_id > contexts.id [delete: restrict]
+Ref: roles.scope_id > access_scopes.id [delete: restrict]
+Ref: success_stories.consent_recorded_by > users.id [delete: set null]
+Ref: success_stories.country_id > countries.id [delete: set null]
+Ref: success_stories.created_by > users.id [delete: restrict]
+Ref: success_stories.organization_id > organizations.id [delete: set null]
+Ref: success_stories.region_id > regions.id [delete: set null]
+Ref: success_stories.reviewed_by > users.id [delete: set null]
+Ref: success_stories.subject_user_id > users.id [delete: set null]
+Ref: ui_translations.language_id > languages.id [delete: cascade]
+Ref: ui_translations.updated_by > users.id [delete: set null]
+Ref: user_contexts.context_id > contexts.id [delete: restrict]
+Ref: user_contexts.granted_by > users.id [delete: set null]
+Ref: user_contexts.user_id > users.id [delete: cascade]
+Ref: user_languages.language_id > languages.id [delete: restrict]
+Ref: user_languages.user_id > users.id [delete: cascade]
+Ref: user_region_changes.new_country_id > countries.id [delete: set null]
+Ref: user_region_changes.new_region_id > regions.id [delete: set null]
+Ref: user_region_changes.old_country_id > countries.id [delete: set null]
+Ref: user_region_changes.old_region_id > regions.id [delete: set null]
+Ref: user_region_changes.requested_by > users.id [delete: set null]
+Ref: user_region_changes.reviewed_by > users.id [delete: set null]
+Ref: user_region_changes.user_id > users.id [delete: restrict]
+Ref: user_sessions.active_context_id > contexts.id [delete: set null]
+Ref: user_sessions.active_scope_id > access_scopes.id [delete: set null]
+Ref: user_sessions.personal_access_token_id > personal_access_tokens.id [delete: set null]
+Ref: user_sessions.revoked_by > users.id [delete: set null]
+Ref: user_sessions.user_id > users.id [delete: cascade]
+Ref: users.country_id > countries.id [delete: set null]
+Ref: users.created_by > users.id [delete: set null]
+Ref: users.interface_language_id > languages.id [delete: set null]
+Ref: users.region_id > regions.id [delete: set null]
+Ref: verification_codes.user_id > users.id [delete: cascade]
