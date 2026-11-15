@@ -28,5 +28,15 @@ class UserSessionPolicy
             ? Response::allow()
             : Response::deny();
     }
+
+public function revokeOthers(User $user):bool{
+    return $user->can('sessions.revoke_own');
+}
+
+
+
+
+
+
 }
 
