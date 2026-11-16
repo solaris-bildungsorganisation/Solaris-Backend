@@ -12,7 +12,7 @@ class RegisterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,9 +21,20 @@ class RegisterRequest extends FormRequest
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-    {
-        return [
-            //
-        ];
-    }
+ {
+ return [
+ 'first_name' => ['required', 'string', 'max:100'],
+ 'last_name' => ['required', 'string', 'max:100'],
+ 'display_name' => ['nullable', 'string', 'max:150'],
+ 'email' =>
+ ['nullable', 'required_without:phone',
+  'email', 'unique:users,email'],
+'phone' => ['nullable', 'required_without:email',
+ 'string', 'unique:users,phone'],
+'account_type' => ['nullable', 'string'],
+'password' => ['required', 'string', 'min:12', 'confirmed'],
+];
 }
+
+}
+

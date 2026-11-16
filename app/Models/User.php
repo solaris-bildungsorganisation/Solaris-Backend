@@ -116,6 +116,21 @@ class User extends Authenticatable
         return $this->hasMany(UserSession::class);
     }
 
+    public function currentSession(): ?UserSession
+    {
+        $tokenId = $this->currentAccessToken()?->id;
+
+        if ($tokenId === null) {
+            return null;
+        }
+
+        return $this->sessions()
+            ->whereNull('revoked_at')
+            ->where(fn($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->where('personal_access_token_id', $tokenId)
+            ->first();
+    }
+
     public function verificationCodes(): HasMany
     {
         return $this->hasMany(VerificationCode::class);
