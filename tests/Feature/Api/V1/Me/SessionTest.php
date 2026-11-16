@@ -1,20 +1,46 @@
 <?php
 
-namespace Tests\Feature\Api\V1\Me;
+namespace Tests\Feature\Me;
 
+use App\Models\User;
+use App\Services\SessionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class SessionTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     */
-    public function test_example(): void
-    {
-        $response = $this->get('/');
+    use RefreshDatabase;
 
-        $response->assertStatus(200);
+    private function loginAs(User $user, array $attrs = []): array
+    {
+        $token = $user->createToken('test');
+        $session = $user->sessions()->create(array_merge([
+            'personal_access_token_id' => $token->accessToken->id,
+            'last_activity_at' => now(),
+            'expires_at' => now()->addDay(),
+        ], $attrs));
+
+        return [$token->plainTextToken, $session];
+    }
+
+    public function test_revoked_token_returns_401(): void
+    {
+        $user = User::factory()->create();
+        [$plain, $session] = $this->loginAs($user);
+
+        app(SessionService::class)->revoke($session, $user, 'logout');
+
+        $this->withToken($plain)->getJson('/api/v1/me/sessions')
+            ->assertUnauthorized();
+    }
+
+    public function test_expired_session_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        [$plain] = $this->loginAs($user, ['expires_at' => now()->subMinute()]);
+
+        $this->withToken($plain)->getJson('/api/v1/me/sessions')
+            ->assertUnauthorized();
     }
 }
+
