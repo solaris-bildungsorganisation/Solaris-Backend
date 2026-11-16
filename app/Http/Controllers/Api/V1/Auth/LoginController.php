@@ -1,13 +1,17 @@
 <?php
+
 namespace App\Http\Controllers\Api\V1\Auth;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Services\SessionService;
 use Illuminate\Support\Facades\Hash;
 use OpenApi\Attributes as OA;
+
 class LoginController extends Controller
 {
-#[OA\Post(
+    #[OA\Post(
         path: '/v1/auth/login',
         tags: ['Auth'],
         summary: 'تسجيل الدخول وإصدار Sanctum token',
@@ -54,6 +58,17 @@ class LoginController extends Controller
                     ->orWhere('phone', $identifier);
             })
             ->first();
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            if ($user) {
+                $user->failed_login_count++;
+                if ($user->failed_login_count >= 5) {
+                    $user->locked_until = now()->addMinutes(15);
+                }
+                $user->save();
+            }
+
+            return response()->json([
+                'message' => '.بيانات الدخول غير صحيحة',
        if (! $user) {
             return response()->json([
                 'message' => 'بيانات الدخول غير صحيحة.',
@@ -61,12 +76,12 @@ class LoginController extends Controller
         }
         if ($user->status !== 'active') {
             return response()->json([
-                'message' => '.الحساب غير  مفعل أو غير متاح لتسجيل الدخول'
+                'message' => '.الحساب غير  مفعل أو غير متاح لتسجيل الدخول',
             ], 403);
         }
         if ($user->locked_until?->isFuture()) {
             return response()->json([
-                'message' => '.الحساب مقفل مؤقتا ببسب محاولات دخول فاشلة'
+                'message' => '.الحساب مقفل مؤقتا ببسب محاولات دخول فاشلة',
             ], 423);
         }
         if ($user->status !== 'active') {
@@ -90,7 +105,10 @@ class LoginController extends Controller
         $user->last_login_at = now();
         $user->last_login_ip = request()->ip();
         $user->save();
-        $token = $user->createToken('api')->plainTextToken;
+        $newToken = $user->createToken('api');
+        app(SessionService::class)->start($user, $newToken, $request);
+        $token = $newToken->plainTextToken;
+
         return response()->json([
             'message' => '.تم تسجيل الدخول بنجاح',
             'token_type' => 'Bearer',
