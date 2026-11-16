@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Me;
 
+use App\Models\Country;
 use App\Models\User;
 use App\Services\SessionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class SessionTest extends TestCase
@@ -43,9 +45,7 @@ class SessionTest extends TestCase
             ->assertUnauthorized();
     }
 
-
-
-public function test_other_users_session_returns_404(): void
+    public function test_other_users_session_returns_404(): void
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
@@ -58,8 +58,32 @@ public function test_other_users_session_returns_404(): void
             ->assertNotFound();
     }
 
+    public function test_admin_cannot_view_sessions_of_user_from_another_country(): void
+    {
+        $permission = Permission::create([
+            'name' => 'sessions.view_any',
+            'guard_name' => 'web',
+        ]);
 
+        $syria = Country::create(['iso2' => 'SY', 'name' => ['ar' => 'سوريا', 'en' => 'Syria']]);
+        $jordan = Country::create(['iso2' => 'JO', 'name' => ['ar' => 'الأردن', 'en' => 'Jordan']]);
 
+        setPermissionsTeamId(config('solaris.global_scope_id'));
 
+        $admin = User::factory()->create(['country_id' => $syria->id]);
+        $admin->givePermissionTo($permission);
+
+        $sameCountry = User::factory()->create(['country_id' => $syria->id]);
+        $otherCountry = User::factory()->create(['country_id' => $jordan->id]);
+
+        [$plain] = $this->loginAs($admin);
+
+        $this->withToken($plain)
+            ->getJson('/api/v1/admin/users/'.$sameCountry->uuid.'/sessions')
+            ->assertOk();
+
+        $this->withToken($plain)
+            ->getJson('/api/v1/admin/users/'.$otherCountry->uuid.'/sessions')
+            ->assertNotFound();
+    }
 }
-

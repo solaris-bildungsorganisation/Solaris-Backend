@@ -14,7 +14,6 @@ class UserSessionPolicy
     public function viewAny(User $user): bool
     {
 
-
         return $user->can('sessions.view_own');
     }
 
@@ -29,34 +28,30 @@ class UserSessionPolicy
             : Response::deny();
     }
 
-public function revokeOthers(User $user):bool{
-    return $user->can('sessions.revoke_own');
-}
-
-
-public function viewForUser(User $admin, User $target): Response
-{
-    if (! $admin->can('sessions.view_any')) {
-        return Response::deny();
+    public function revokeOthers(User $user): bool
+    {
+        return $user->can('sessions.revoke_own');
     }
 
-    return $admin->country_id === $target->country_id
-        ? Response::allow()
-        : Response::denyAsNotFound();
-}
+    public function viewForUser(User $admin, User $target): Response
+    {
+        if (! $admin->can('sessions.view_any')) {
+            return Response::deny();
+        }
 
-public function revokeForUser(User $admin, User $target): Response
-{
-    if (! $admin->can('sessions.revoke_any')) {
-        return Response::deny();
+        return $admin->country_id === $target->country_id
+            ? Response::allow()
+            : Response::denyAsNotFound();
     }
 
-    return $admin->country_id === $target->country_id
-        ? Response::allow()
-        : Response::denyAsNotFound();
+    public function revokeForUser(User $admin, User $target): Response
+    {
+        if (! $admin->can('sessions.revoke_any')) {
+            return Response::deny();
+        }
+
+        return $admin->country_id === $target->country_id
+            ? Response::allow()
+            : Response::denyAsNotFound();
+    }
 }
-
-
-
-}
-

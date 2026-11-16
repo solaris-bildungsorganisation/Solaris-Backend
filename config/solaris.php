@@ -18,6 +18,6 @@ return [
         'first_name' => env('SOLARIS_SUPER_ADMIN_FIRST_NAME', 'Super'),
         'last_name' => env('SOLARIS_SUPER_ADMIN_LAST_NAME', 'Admin'),
     ],
-    'session_lifetime_days'=>30,
+    'session_lifetime_days' => 30,
 
 ];

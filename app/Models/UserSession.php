@@ -18,7 +18,7 @@ class UserSession extends Model
         'user_id', 'personal_access_token_id', 'active_context_id', 'active_scope_id',
         'device_name', 'platform', 'ip_address', 'user_agent',
         'last_activity_at', 'expires_at',
-        'revoked_at','revoked_by','revoke_reason',
+        'revoked_at', 'revoked_by', 'revoke_reason',
     ];
 
     protected function casts(): array

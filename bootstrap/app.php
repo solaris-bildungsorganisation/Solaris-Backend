@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureMfaConfirmed;
+use App\Http\Middleware\EnsureSessionIsValid;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,8 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-$middleware->alias([
-    'session.valid'=>\App\Http\Middleware\EnsureSessionIsValid::class,]);
+        $middleware->alias([
+            'session.valid' => EnsureSessionIsValid::class,
+            'mfa.confirmed' => EnsureMfaConfirmed::class]);
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {

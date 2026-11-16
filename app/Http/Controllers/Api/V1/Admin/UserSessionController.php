@@ -28,22 +28,17 @@ class UserSessionController extends Controller
 
         $service->revokeAllExcept($user, null, $request->user(), 'admin_terminated');
 
-
-
-activity('security')
-    ->causedBy($request->user())
-    ->performedOn($user)
-    ->tap(function ($activity) use ($request) {
-        $activity->context_id = null;
-        $activity->sensitivity = 'sensitive';
-        $activity->ip_address = $request->ip();
-        $activity->session_id = null;
-    })
-    ->withProperties(['reason' => $request->validated('reason')])
-    ->log('sessions_revoked_by_admin');
-
-
-
+        activity('security')
+            ->causedBy($request->user())
+            ->performedOn($user)
+            ->tap(function ($activity) use ($request) {
+                $activity->context_id = null;
+                $activity->sensitivity = 'sensitive';
+                $activity->ip_address = $request->ip();
+                $activity->session_id = null;
+            })
+            ->withProperties(['reason' => $request->validated('reason')])
+            ->log('sessions_revoked_by_admin');
 
         return response()->noContent();
     }
