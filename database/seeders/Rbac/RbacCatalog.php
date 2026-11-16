@@ -161,7 +161,7 @@ final class RbacCatalog
             ],
             'academic_student' => [
                 'name' => ['طالب أكاديمي', 'Academic student'], 'context' => 'learning',
-                'administrative' => false, 'self_registrable' => false, 'requires_approval' => false,
+                'administrative' => false, 'self_registrable' => true, 'requires_approval' => true,
                 'scopes' => ['global', 'organization'], 'rank' => 10, 'permissions' => $self,
             ],
             'vocational_trainee' => [
