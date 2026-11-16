@@ -4,6 +4,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Services\SessionService;
 use OpenApi\Attributes as OA;
 class LoginController extends Controller
 {
@@ -81,7 +82,9 @@ class LoginController extends Controller
         $user->last_login_at = now();
         $user->last_login_ip = request()->ip();
         $user->save();
-        $token = $user->createToken('api')->plainTextToken;
+        $newToken=$user->createToken('api');
+        app(SessionService::class)->start($user,$newToken,$request);
+        $token = $newToken->plainTextToken;
         return response()->json([
             'message' => '.تم تسجيل الدخول بنجاح',
             'token_type' => 'Bearer',

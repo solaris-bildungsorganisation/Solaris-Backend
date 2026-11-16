@@ -3,6 +3,8 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use App\Models\UserSession;
+use App\Services\SessionService;
 class LogoutController extends Controller
 {
 #[OA\Post(
@@ -23,9 +25,17 @@ class LogoutController extends Controller
 )]
  public function __invoke(Request $request)
  {
- $request->user()->currentAccessToken()?->delete();
+    $token=$request->user()->currentAccessToken();
+    $session=UserSession::where('personal_access_token_id',$token?->id)->first();
+    if($session){
+        app(SessionService::class)->revoke($session,$request->user(),'logout');
+    }
+    else{
+        $token?->delete();
+    }
  return response()->json([
  'message' => '.تم تسجيل الخروج وإلغاء الرمز الحالي'
  ]);
  }
+
 }
