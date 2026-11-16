@@ -1,0 +1,178 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Solaris Backend API",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api"
+        }
+    ],
+    "paths": {
+        "/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "تسجيل الدخول وإصدار Sanctum token",
+                "operationId": "6e8347b05c722875c14017197c9085d9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "identifier",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "identifier": {
+                                        "description": "البريد الإلكتروني أو رقم الهاتف",
+                                        "type": "string",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "نجاح؛ تشمل الاستجابة access_token"
+                    },
+                    "401": {
+                        "description": "بيانات الدخول غير صحيحة"
+                    },
+                    "403": {
+                        "description": "الحساب غير نشط"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
+                    }
+                }
+            }
+        },
+        "/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "إلغاء التوكن الحالي وتسجيل الخروج",
+                "operationId": "e32ffcabd8c7c4d859debc78ba0bae87",
+                "responses": {
+                    "200": {
+                        "description": "تم إلغاء التوكن"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "إنشاء حساب جديد",
+                "description": "Handle the incoming request.",
+                "operationId": "f89ab79dd86bdbaf53e6d140894d8298",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "أحمد"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "محمد"
+                                    },
+                                    "display_name": {
+                                        "type": "string",
+                                        "example": "Ahmed M",
+                                        "nullable": true
+                                    },
+                                    "email": {
+                                        "description": "أرسل البريد أو الهاتف؛ يجب توفير أحدهما",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "description": "أرسل الهاتف أو البريد؛ يجب توفير أحدهما",
+                                        "type": "string",
+                                        "example": "+963912345678",
+                                        "nullable": true
+                                    },
+                                    "account_type": {
+                                        "description": "اختياري؛ إذا لم يُرسل يُستخدم academic_student",
+                                        "type": "string",
+                                        "example": "academic_student",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "StrongPassword123!"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "StrongPassword123!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء الحساب"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات أو البريد/الهاتف مستخدم مسبقًا"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "Sanctum Personal Access Token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Auth"
+        }
+    ]
+}
