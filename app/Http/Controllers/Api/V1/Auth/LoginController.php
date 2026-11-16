@@ -54,16 +54,9 @@ class LoginController extends Controller
                     ->orWhere('phone', $identifier);
             })
             ->first();
-        if (!$user || !Hash::check($data['password'], $user->password)) {
-            if ($user) {
-                $user->failed_login_count++;
-                if ($user->failed_login_count >= 5) {
-                    $user->locked_until = now()->addMinutes(15);
-                }
-                $user->save();
-            }
+       if (! $user) {
             return response()->json([
-                'message' => '.بيانات الدخول غير صحيحة'
+                'message' => 'بيانات الدخول غير صحيحة.',
             ], 401);
         }
         if ($user->status !== 'active') {
@@ -75,6 +68,22 @@ class LoginController extends Controller
             return response()->json([
                 'message' => '.الحساب مقفل مؤقتا ببسب محاولات دخول فاشلة'
             ], 423);
+        }
+        if ($user->status !== 'active') {
+            return response()->json([
+                'message' => 'الحساب غير مفعل أو غير متاح لتسجيل الدخول.'
+            ], 403);
+        }
+        if (!Hash::check($data['password'], $user->password)) {
+            $user->failed_login_count++;
+            if ($user->failed_login_count >= 5) {
+                $user->locked_until = now()->addMinutes(15);
+            }
+            $user->save();
+
+            return response()->json([
+                'message' => 'بيانات الدخول غير صحيحة.'
+            ], 401);
         }
         $user->failed_login_count = 0;
         $user->locked_until = null;

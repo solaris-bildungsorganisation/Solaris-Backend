@@ -23,9 +23,19 @@ class LogoutController extends Controller
 )]
  public function __invoke(Request $request)
  {
- $request->user()->currentAccessToken()?->delete();
- return response()->json([
- 'message' => '.تم تسجيل الخروج وإلغاء الرمز الحالي'
- ]);
+  $user = $request->user();
+    $token = $user?->currentAccessToken();
+
+    if (! $user || ! $token || ! method_exists($token, 'delete')) {
+        return response()->json([
+            'message' => 'أرسل Bearer token صالحًا لتسجيل الخروج.',
+        ], 401);
+    }
+
+    $token->delete();
+
+    return response()->json([
+        'message' => 'تم تسجيل الخروج وإلغاء الرمز الحالي.',
+    ]);
  }
 }
