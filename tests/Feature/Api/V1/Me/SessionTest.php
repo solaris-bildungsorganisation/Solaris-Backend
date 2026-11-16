@@ -42,5 +42,24 @@ class SessionTest extends TestCase
         $this->withToken($plain)->getJson('/api/v1/me/sessions')
             ->assertUnauthorized();
     }
+
+
+
+public function test_other_users_session_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        [$plain] = $this->loginAs($user);
+        [, $otherSession] = $this->loginAs($other);
+
+        $this->withToken($plain)
+            ->deleteJson('/api/v1/me/sessions/'.$otherSession->id)
+            ->assertNotFound();
+    }
+
+
+
+
 }
 
