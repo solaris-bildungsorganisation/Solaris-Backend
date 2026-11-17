@@ -28,49 +28,24 @@ class LogoutController extends Controller
     )]
     public function __invoke(Request $request)
     {
-        $token = $request->user()->currentAccessToken();
-        $session = UserSession::where('personal_access_token_id', $token?->id)->first();
+        $user = $request->user();
+        $token = $user?->currentAccessToken();
+
+        if (! $user || ! $token || ! method_exists($token, 'delete')) {
+            return response()->json([
+                'message' => 'أرسل Bearer token صالحًا لتسجيل الخروج.',
+            ], 401);
+        }
+
+        $session = UserSession::where('personal_access_token_id', $token->id)->first();
         if ($session) {
-            app(SessionService::class)->revoke($session, $request->user(), 'logout');
+            app(SessionService::class)->revoke($session, $user, 'logout');
         } else {
-            $token?->delete();
+            $token->delete();
         }
 
         return response()->json([
-            'message' => '.تم تسجيل الخروج وإلغاء الرمز الحالي',
+            'message' => 'تم تسجيل الخروج وإلغاء الرمز الحالي.',
         ]);
     }
-#[OA\Post(
-    path: '/v1/auth/logout',
-    summary: 'إلغاء التوكن الحالي وتسجيل الخروج',
-    tags: ['Auth'],
-    security: [['bearerAuth' => []]],
-    responses: [
-        new OA\Response(
-            response: 200,
-            description: 'تم إلغاء التوكن'
-        ),
-        new OA\Response(
-            response: 401,
-            description: 'التوكن مفقود أو غير صالح'
-        ),
-    ]
-)]
- public function __invoke(Request $request)
- {
-  $user = $request->user();
-    $token = $user?->currentAccessToken();
-
-    if (! $user || ! $token || ! method_exists($token, 'delete')) {
-        return response()->json([
-            'message' => 'أرسل Bearer token صالحًا لتسجيل الخروج.',
-        ], 401);
-    }
-
-    $token->delete();
-
-    return response()->json([
-        'message' => 'تم تسجيل الخروج وإلغاء الرمز الحالي.',
-    ]);
- }
 }

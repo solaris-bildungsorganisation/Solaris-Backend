@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Me;
 
+use App\Models\AccessScope;
 use App\Models\Country;
 use App\Models\User;
 use App\Services\SessionService;
@@ -68,7 +69,10 @@ class SessionTest extends TestCase
         $syria = Country::create(['iso2' => 'SY', 'name' => ['ar' => 'سوريا', 'en' => 'Syria']]);
         $jordan = Country::create(['iso2' => 'JO', 'name' => ['ar' => 'الأردن', 'en' => 'Jordan']]);
 
-        setPermissionsTeamId(config('solaris.global_scope_id'));
+        // B4: النطاق يأتي من إسناد الصلاحية (ورقة "قواعد النطاق")، لا من دولة المسؤول نفسه.
+        // إسناد بنطاق دولة سوريا + جلسة نطاقها الفعّال سوريا → يرى مستخدمي سوريا فقط.
+        $syriaScope = AccessScope::forCountry($syria);
+        setPermissionsTeamId($syriaScope->id);
 
         $admin = User::factory()->create(['country_id' => $syria->id]);
         $admin->givePermissionTo($permission);
@@ -76,7 +80,7 @@ class SessionTest extends TestCase
         $sameCountry = User::factory()->create(['country_id' => $syria->id]);
         $otherCountry = User::factory()->create(['country_id' => $jordan->id]);
 
-        [$plain] = $this->loginAs($admin);
+        [$plain] = $this->loginAs($admin, ['active_scope_id' => $syriaScope->id]);
 
         $this->withToken($plain)
             ->getJson('/api/v1/admin/users/'.$sameCountry->uuid.'/sessions')

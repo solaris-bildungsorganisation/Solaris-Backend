@@ -2,65 +2,62 @@
 
 namespace App\Policies;
 
+use App\Models\Organization;
 use App\Models\OrganizationMembership;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * أعضاء المؤسسة — FR-ORG-002, 006. فلتر النطاق: عبر مؤسسة العضوية.
+ * لا تعديل ولا إزالة لعضويتك أنت (ورقة الصلاحيات: "لا على النفس").
+ */
 class OrganizationMembershipPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user, Organization $organization): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'organization_members.view', $organization);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, OrganizationMembership $organizationMembership): bool
+    public function view(User $user, OrganizationMembership $membership): Response
     {
-        return false;
+        if ($membership->user_id === $user->getKey()) {
+            return Response::allow();
+        }
+
+        return ScopeGuard::authorize($user, 'organization_members.view', $membership);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    /** إضافة عضو تتم عبر الدعوة */
+    public function create(User $user, Organization $organization): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'organization_members.invite', $organization, 'organization_members.view');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, OrganizationMembership $organizationMembership): bool
+    public function update(User $user, OrganizationMembership $membership): Response
     {
-        return false;
+        if ($membership->user_id === $user->getKey()) {
+            return Response::deny('لا يمكنك تعديل عضويتك.');
+        }
+
+        return ScopeGuard::authorize($user, 'organization_members.update', $membership, 'organization_members.view');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, OrganizationMembership $organizationMembership): bool
+    public function delete(User $user, OrganizationMembership $membership): Response
     {
-        return false;
+        if ($membership->user_id === $user->getKey()) {
+            return Response::deny('لا يمكنك إزالة نفسك من المؤسسة بهذه العملية.');
+        }
+
+        return ScopeGuard::authorize($user, 'organization_members.remove', $membership, 'organization_members.view');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, OrganizationMembership $organizationMembership): bool
+    public function restore(User $user, OrganizationMembership $membership): Response
     {
-        return false;
+        return $this->update($user, $membership);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, OrganizationMembership $organizationMembership): bool
+    public function forceDelete(User $user, OrganizationMembership $membership): Response
     {
-        return false;
+        return Response::deny();
     }
 }

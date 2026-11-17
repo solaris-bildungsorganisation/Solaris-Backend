@@ -6,61 +6,45 @@ use App\Models\RegionAccessPolicy;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * سياسات المناطق — FR-AUTH-033, 034, 035.
+ *  - العرض (region_policies.view): سياسات الدولة/المنطقة داخل النطاق + السياسات العامة.
+ *  - الإدارة (region_policies.manage): restricted + MFA، ونطاق G فقط (D7).
+ */
 class RegionAccessPolicyPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'region_policies.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, RegionAccessPolicy $regionAccessPolicy): bool
+    public function view(User $user, RegionAccessPolicy $policy): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'region_policies.view', $policy);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'region_policies.manage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, RegionAccessPolicy $regionAccessPolicy): bool
+    public function update(User $user, RegionAccessPolicy $policy): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'region_policies.manage', $policy, 'region_policies.view');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, RegionAccessPolicy $regionAccessPolicy): bool
+    public function delete(User $user, RegionAccessPolicy $policy): Response
     {
-        return false;
+        return $this->update($user, $policy);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, RegionAccessPolicy $regionAccessPolicy): bool
+    public function restore(User $user, RegionAccessPolicy $policy): Response
     {
-        return false;
+        return $this->update($user, $policy);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, RegionAccessPolicy $regionAccessPolicy): bool
+    public function forceDelete(User $user, RegionAccessPolicy $policy): Response
     {
-        return false;
+        return Response::deny();
     }
 }
