@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Me\ProfileController;
-use App\Http\Controllers\Api\V1\Me\LanguageController;
 use App\Http\Controllers\Api\V1\Me\AccountTypeRequestController;
+use App\Http\Controllers\Api\V1\Me\LanguageController;
+use App\Http\Controllers\Api\V1\Me\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Me;
 use App\Http\Controllers\Controller;
 use App\Models\UserLanguage;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use OpenApi\Attributes as OA;
 
 class LanguageController extends Controller
@@ -49,7 +50,6 @@ class LanguageController extends Controller
         ]);
     }
 
-
     /**
      * Store a newly created resource in storage.
      */
@@ -90,13 +90,13 @@ class LanguageController extends Controller
                 'required',
                 'integer',
                 'exists:languages,id',
-                \Illuminate\Validation\Rule::unique('user_languages', 'language_id')
+                Rule::unique('user_languages', 'language_id')
                     ->where('user_id', $request->user()->id),
             ],
             'proficiency' => [
                 'required',
                 'string',
-                \Illuminate\Validation\Rule::in([
+                Rule::in([
                     'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native',
                 ]),
             ],
@@ -174,7 +174,7 @@ class LanguageController extends Controller
                 'sometimes',
                 'required',
                 'string',
-                \Illuminate\Validation\Rule::in([
+                Rule::in([
                     'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native',
                 ]),
             ],
@@ -188,7 +188,6 @@ class LanguageController extends Controller
             'data' => $userLanguage->load('language'),
         ]);
     }
-
 
     /**
      * Remove the specified resource from storage.

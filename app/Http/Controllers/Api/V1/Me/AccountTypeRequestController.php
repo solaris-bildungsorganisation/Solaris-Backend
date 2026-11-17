@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Me;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\AccountTypeRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class AccountTypeRequestController extends Controller
@@ -26,7 +25,7 @@ class AccountTypeRequestController extends Controller
     )]
     public function index(Request $request): JsonResponse
     {
-        If (!$request->user()->can('account_type_requests.create_own')) {
+        if (! $request->user()->can('account_type_requests.create_own')) {
             abort(403, 'Unauthorized');
         }
         $requests = $request->user()->accountTypeRequests()->latest()->get();
@@ -50,7 +49,7 @@ class AccountTypeRequestController extends Controller
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string')
-            )
+            ),
         ],
         responses: [
             new OA\Response(

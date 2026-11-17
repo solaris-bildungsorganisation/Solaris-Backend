@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1\Me;
 
-use App\Models\Language;
-use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use OpenApi\Attributes as OA;
 
 class ProfileController extends Controller
@@ -164,7 +164,7 @@ class ProfileController extends Controller
             default => abort(422, 'نوع الصورة غير مدعوم.'),
         };
 
-        $filename = (string) \Illuminate\Support\Str::uuid() . '.' . $extension;
+        $filename = (string) Str::uuid().'.'.$extension;
 
         $path = $file->storeAs('avatars', $filename, 'public');
 

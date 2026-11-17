@@ -26,7 +26,7 @@ class UserResource extends JsonResource
             'phone' => $user->phone,
 
             'avatar_url' => $user->avatar_path
-                ? asset('storage/' . $user->avatar_path)
+                ? asset('storage/'.$user->avatar_path)
                 : null,
 
             'birth_date' => $user->birth_date,
