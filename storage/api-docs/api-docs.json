@@ -159,6 +159,250 @@
                 }
             }
         },
+        "/v1/me/account-type-requests": {
+            "get": {
+                "tags": [
+                    "Profile - Account Type Requests"
+                ],
+                "summary": "عرض طلبات المستخدم الحالية وحالتها",
+                "description": "يعرض قائمة بطلبات أنواع الحسابات الخاصة بالمستخدم الحالي مع حالتها.",
+                "operationId": "b2ac2ece51bd2c75f449a53221ae476c",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب الطلبات بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/account-type-requests/{uuid}": {
+            "delete": {
+                "tags": [
+                    "Profile - Account Type Requests"
+                ],
+                "summary": "إلغاء طلب ما زال pending فقط",
+                "description": "إلغاء طلب نوع الحساب بشرط أن يكون ما زال في حالة pending.",
+                "operationId": "5f85cc5d32db955d27b3d0ad53ab52c1",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "description": "UUID الخاص بالطلب",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم إلغاء الطلب بنجاح"
+                    },
+                    "422": {
+                        "description": "لا يمكن إلغاء الطلب لأنه لم يعد في حالة pending"
+                    },
+                    "404": {
+                        "description": "الطلب غير موجود أو لا يخص المستخدم"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/languages": {
+            "get": {
+                "tags": [
+                    "Profile - Languages"
+                ],
+                "summary": "عرض لغات المستخدم",
+                "description": "يعرض اللغات ومستويات إتقان المستخدم الحالي.",
+                "operationId": "02c951d01454a2f20b08dea69b6b9637",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب لغات المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Profile - Languages"
+                ],
+                "summary": "إضافة لغة للمستخدم",
+                "description": "Store a newly created resource in storage.",
+                "operationId": "f7ed220aef9a0da22ca472ecdd3a0f60",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "language_id",
+                                    "proficiency"
+                                ],
+                                "properties": {
+                                    "language_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "proficiency": {
+                                        "type": "string",
+                                        "example": "B2",
+                                        "enum": [
+                                            "A1",
+                                            "A2",
+                                            "B1",
+                                            "B2",
+                                            "C1",
+                                            "C2",
+                                            "native"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تمت إضافة اللغة بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "422": {
+                        "description": "فشل التحقق أو اللغة مضافة مسبقاً"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/languages/{userLanguage}": {
+            "delete": {
+                "tags": [
+                    "Profile - Languages"
+                ],
+                "summary": "حذف لغة من ملف المستخدم",
+                "description": "Remove the specified resource from storage.",
+                "operationId": "2cc2ea00f0dfdc5e3ed45d114adfc621",
+                "parameters": [
+                    {
+                        "name": "userLanguage",
+                        "in": "path",
+                        "description": "معرّف سجل لغة المستخدم",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم حذف اللغة بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا يمكن حذف لغة تم التحقق منها"
+                    },
+                    "404": {
+                        "description": "سجل اللغة غير موجود"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Profile - Languages"
+                ],
+                "summary": "تعديل مستوى إتقان اللغة",
+                "description": "Update the specified resource in storage.",
+                "operationId": "76937bd59824d87698c52bf4087ab396",
+                "parameters": [
+                    {
+                        "name": "userLanguage",
+                        "in": "path",
+                        "description": "معرّف سجل لغة المستخدم",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "proficiency": {
+                                        "type": "string",
+                                        "example": "C1",
+                                        "enum": [
+                                            "A1",
+                                            "A2",
+                                            "B1",
+                                            "B2",
+                                            "C1",
+                                            "C2",
+                                            "native"
+                                        ]
+                                    },
+                                    "is_native": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث اللغة بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا يمكن تعديل لغة تم التحقق منها"
+                    },
+                    "404": {
+                        "description": "سجل اللغة غير موجود"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
         "/v1/me/permissions": {
             "get": {
                 "tags": [
@@ -235,6 +479,78 @@
                 ]
             }
         },
+        "/v1/me": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "عرض الملف الشخصي للمستخدم الحالي",
+                "description": "GET /me\nعرض الملف الشخصي للمستخدم الحالي.",
+                "operationId": "dccd77c88552b970ea342b959299903f",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب الملف الشخصي بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "تعديل بيانات الملف الشخصي",
+                "description": "PATCH /me\nتعديل بيانات الملف الشخصي.",
+                "operationId": "b1b0f3236f90edf639678b0a96611a2c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "Ahmad"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Ali"
+                                    },
+                                    "display_name": {
+                                        "type": "string",
+                                        "example": "Ahmad",
+                                        "nullable": true
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "example": "Asia/Damascus"
+                                    },
+                                    "interface_language_id": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تعديل الملف الشخصي بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
         "/v1/me/scopes": {
             "get": {
                 "tags": [
@@ -257,6 +573,27 @@
                 ]
             }
         },
+        "/v1/me/avatar": {
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "رفع الصورة الشخصية",
+                "description": "POST /me/avatar\nرفع الصورة الشخصية.",
+                "operationId": "565dce30adcb83a471c0f6f3178a91d3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "avatar"
+                                ],
+                                "properties": {
+                                    "avatar": {
+                                        "description": "صورة JPG أو PNG أو WEBP، بحد أقصى 2MB",
+                                        "type": "string",
+                                        "format": "binary"
         "/v1/me/scope": {
             "post": {
                 "tags": [
@@ -291,6 +628,34 @@
                 },
                 "responses": {
                     "200": {
+                        "description": "تم رفع الصورة بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "422": {
+                        "description": "الصورة غير صالحة أو تجاوزت الحجم المسموح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "حذف الصورة الشخصية",
+                "description": "DELETE /me/avatar\nحذف الصورة الشخصية.",
+                "operationId": "0793a924948c0c60ac1a0e68ec3597de",
+                "responses": {
+                    "200": {
+                        "description": "تم حذف الصورة الشخصية بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
                         "description": "تم التفعيل؛ الاستجابة = صلاحياتي في النطاق الجديد (مثل GET /me/permissions)"
                     },
                     "409": {
@@ -323,6 +688,16 @@
             "description": "Auth"
         },
         {
+            "name": "Profile - Account Type Requests",
+            "description": "Profile - Account Type Requests"
+        },
+        {
+            "name": "Profile - Languages",
+            "description": "Profile - Languages"
+        },
+        {
+            "name": "Profile",
+            "description": "Profile"
             "name": "Me",
             "description": "Me"
         }
