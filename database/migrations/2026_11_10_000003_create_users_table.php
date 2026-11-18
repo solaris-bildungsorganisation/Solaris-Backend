@@ -64,7 +64,7 @@ return new class extends Migration
 
         // FR-AUTH-008: unique عادي يكفي في MySQL — يسمح بعدة NULL، والـ collation لا يفرّق بين حالة الأحرف.
         // يشمل الحسابات المغلقة/المحذوفة ناعمًا (لا إعادة استخدام للبريد).
-        DB::statement("ALTER TABLE users ADD CONSTRAINT users_contact_required CHECK (email IS NOT NULL OR phone IS NOT NULL)");
+        DB::statement('ALTER TABLE users ADD CONSTRAINT users_contact_required CHECK (email IS NOT NULL OR phone IS NOT NULL)');
         DB::statement("ALTER TABLE users ADD CONSTRAINT users_status_check CHECK (status IN ('pending_verification','active','suspended','blocked','closed'))");
 
         // FR-AUTH-027: منع إعادة استخدام كلمات المرور السابقة
