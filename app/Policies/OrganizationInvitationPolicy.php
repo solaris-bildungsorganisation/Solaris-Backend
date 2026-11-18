@@ -2,65 +2,64 @@
 
 namespace App\Policies;
 
+use App\Models\AccessScope;
+use App\Models\Organization;
 use App\Models\OrganizationInvitation;
+use App\Models\Role;
 use App\Models\User;
+use App\Services\Rbac\RoleAssignmentService;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * دعوات المؤسسة — FR-ORG-002. فلتر النطاق: organization_id = المؤسسة (عبر ScopeGuard).
+ * الدعوة بدور مقترح (role_id) تخضع لورقة "إسناد الأدوار" (القاعدة 8).
+ */
 class OrganizationInvitationPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user, Organization $organization): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'organization_members.view', $organization);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, OrganizationInvitation $organizationInvitation): bool
+    public function view(User $user, OrganizationInvitation $invitation): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'organization_members.view', $invitation);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    /** $role: الدور المقترح في الدعوة (اختياري) — يجب أن يحق للداعي إسناده داخل المؤسسة. */
+    public function create(User $user, Organization $organization, ?Role $role = null): Response
     {
-        return false;
+        $decision = ScopeGuard::authorize($user, 'organization_members.invite', $organization, 'organization_members.view');
+        if ($decision->denied() || $role === null) {
+            return $decision;
+        }
+
+        $scope = new AccessScope(['type' => AccessScope::TYPE_ORGANIZATION, 'organization_id' => $organization->getKey()]);
+
+        return app(RoleAssignmentService::class)->canGrant($user, $role, $scope)
+            ? Response::allow()
+            : Response::deny('لا يحق لك دعوة عضو بهذا الدور.');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, OrganizationInvitation $organizationInvitation): bool
+    /** إعادة الإرسال/التعديل */
+    public function update(User $user, OrganizationInvitation $invitation): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'organization_members.invite', $invitation, 'organization_members.view');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, OrganizationInvitation $organizationInvitation): bool
+    /** إلغاء الدعوة */
+    public function delete(User $user, OrganizationInvitation $invitation): Response
     {
-        return false;
+        return $this->update($user, $invitation);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, OrganizationInvitation $organizationInvitation): bool
+    public function restore(User $user, OrganizationInvitation $invitation): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, OrganizationInvitation $organizationInvitation): bool
+    public function forceDelete(User $user, OrganizationInvitation $invitation): Response
     {
-        return false;
+        return Response::deny();
     }
 }

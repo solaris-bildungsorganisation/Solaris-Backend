@@ -1,0 +1,2945 @@
+{
+  "info": {
+    "_postman_id": "1bc38786-2296-4b9a-9cbe-acb1c4eff5ff",
+    "name": "Solaris API — B4 RBAC (كل الـ APIs الحالية)",
+    "description": "# Solaris API — B4 (الصلاحيات والنطاقات) — Postman Collection\n\nمجموعة كاملة لكل الـ APIs الموجودة حاليًا في المشروع (9 + 2 الجديدة)، مرتبة كسيناريو اختبار يمكن تشغيله بالكامل عبر **Collection Runner**.\n\n## قبل البدء (مرة واحدة)\n1. شغّل MySQL (XAMPP) ثم السيرفر: `php artisan serve`\n2. أنشئ الحسابات التجريبية: `php artisan db:seed --class=\"Database\\Seeders\\DemoSeeder\"`\n3. في Postman: Import → اختر ملف الـ collection وملف الـ environment، ثم اختر environment **Solaris Local**.\n\n## الحسابات التجريبية (كلمة المرور لكلها: `Solaris@Demo2026`)\n| الحساب | الدور @ النطاق | الغرض |\n|---|---|---|\n| super@demo.test | super_admin @ عام | كل الـ 55 صلاحية + تسجيل التجاوز في activity_log |\n| admin@demo.test | platform_admin @ عام | 53 صلاحية، يرى كل المستخدمين |\n| admin.sy@demo.test | platform_admin @ دولة سوريا | يرى مستخدمي سوريا فقط، لا إعدادات عامة (45 صلاحية) |\n| admin.damascus@demo.test | platform_admin @ منطقة دمشق | يرى دمشق وما تحتها فقط |\n| orgadmin@demo.test | learner @ عام + organization_admin @ مؤسسة Demo Partner Org | صلاحيات المؤسسة بعد تفعيل نطاقها وسياقها (27) |\n| officer@demo.test | program_officer @ عام | مؤشرات وتقارير (21) |\n| dual@demo.test | learner + platform_admin @ عام | عزل السياق: في learning لا يرى الإدارة |\n| learner@demo.test | learner @ عام | 9 صلاحيات ذاتية فقط |\n| member@demo.test | learner — عضو في Demo Partner Org (دمشق) | هدف |\n| aleppo@demo.test | learner — سوريا/حلب | هدف |\n| germany@demo.test | learner — ألمانيا | هدف خارج سوريا |\n| suspended@demo.test | حساب موقوف | تسجيل الدخول = 403 |\n\n## مفاهيم مهمة\n- **النطاق الفعّال (scope):** بعد الدخول يكون النطاق = العام. الأدوار المسندة بنطاق دولة/منطقة/مؤسسة لا تعمل إلا بعد تفعيل نطاقها عبر `POST /me/scope`.\n- **السياق الفعّال (context):** الدور لا يُحسب إلا إذا طابق سياقه السياق الفعّال (الصلاحيات الذاتية تعمل دائمًا). يُختار مع النطاق: `{\"scope_id\": 4, \"context\": \"organization\"}`.\n- **الرفض:** 403 = لا تملك الصلاحية / 404 = السجل خارج نطاقك (لا نكشف وجوده).\n- **MFA (D8):** الصلاحيات requires_mfa تُسمح الآن مع تسجيل تحذير في activity_log. مع `SOLARIS_MFA_MODE=enforce` تصبح 403.\n- **throttle الدخول:** 5 محاولات/دقيقة. سكربت المجموعة ينتظر تلقائيًا، لذلك تشغيل المجموعة كاملة يستغرق ~3 دقائق.\n\n## الترتيب\nشغّل المجلدات بالترتيب (01 → 07)؛ كل طلب يحفظ التوكنات والمعرفات التي يحتاجها ما بعده، وكل طلب فيه Tests تتحقق من النتيجة المتوقعة.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// مسار /auth/login محمي بـ throttle:5,1 (5 محاولات بالدقيقة لكل IP).",
+          "// هذا السكربت ينتظر تلقائيًا قبل طلب الدخول السادس خلال دقيقة، حتى يعمل Collection Runner دون 429.",
+          "if (pm.request.url.toString().includes('/auth/login')) {",
+          "    const now = Date.now();",
+          "    const times = JSON.parse(pm.collectionVariables.get('login_times') || '[]').filter(t => now - t < 61000);",
+          "    const wait = times.length >= 5 ? times[times.length - 5] + 61000 - now : 0;",
+          "    times.push(now + wait);",
+          "    pm.collectionVariables.set('login_times', JSON.stringify(times.slice(-5)));",
+          "    if (wait > 0) {",
+          "        console.log('Login throttle: waiting ' + Math.round(wait / 1000) + 's');",
+          "        setTimeout(() => {}, wait);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token_super",
+      "value": ""
+    },
+    {
+      "key": "token_admin",
+      "value": ""
+    },
+    {
+      "key": "token_admin_sy",
+      "value": ""
+    },
+    {
+      "key": "token_admin_damascus",
+      "value": ""
+    },
+    {
+      "key": "token_orgadmin",
+      "value": ""
+    },
+    {
+      "key": "token_officer",
+      "value": ""
+    },
+    {
+      "key": "token_dual",
+      "value": ""
+    },
+    {
+      "key": "token_learner",
+      "value": ""
+    },
+    {
+      "key": "token_member",
+      "value": ""
+    },
+    {
+      "key": "token_aleppo",
+      "value": ""
+    },
+    {
+      "key": "token_germany",
+      "value": ""
+    },
+    {
+      "key": "uuid_super",
+      "value": ""
+    },
+    {
+      "key": "uuid_admin",
+      "value": ""
+    },
+    {
+      "key": "uuid_learner",
+      "value": ""
+    },
+    {
+      "key": "uuid_member",
+      "value": ""
+    },
+    {
+      "key": "uuid_aleppo",
+      "value": ""
+    },
+    {
+      "key": "uuid_germany",
+      "value": ""
+    },
+    {
+      "key": "scope_sy",
+      "value": ""
+    },
+    {
+      "key": "scope_damascus",
+      "value": ""
+    },
+    {
+      "key": "scope_org",
+      "value": ""
+    },
+    {
+      "key": "org_uuid",
+      "value": ""
+    },
+    {
+      "key": "admin_session_id",
+      "value": ""
+    },
+    {
+      "key": "login_times",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 · Auth — التسجيل والدخول",
+      "description": "تسجيل حساب جديد، وتسجيل دخول كل الحسابات التجريبية (يحفظ التوكنات في متغيرات المجموعة)، وحالات الرفض.",
+      "item": [
+        {
+          "name": "Register — حساب جديد",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "**POST /auth/register** — إنشاء حساب (FR-AUTH-001/002).\n\n- `email` أو `phone` (أحدهما إلزامي، فريد).\n- `password` 12 محرفًا على الأقل + `password_confirmation`.\n- `account_type` اختياري (افتراضي academic_student) — يُنشأ له طلب نوع حساب بحالة under_review.\n\nالحساب الجديد حالته `pending_verification` فلا يستطيع الدخول حتى التحقق، ولا يُسند له دور تلقائيًا بعد (FR-AUTH-003 — ملاحظة مفتوحة).\n**201** نجاح · **422** فشل التحقق أو البريد مستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"email\": \"new.{{$timestamp}}@demo.test\",\n  \"password\": \"{{password}}\",\n  \"password_confirmation\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"account_type_status = under_review\", () => pm.expect(pm.response.json().data.account_type_status).to.eql(\"under_review\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register — بيانات ناقصة (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "بدون بريد أو هاتف وكلمة مرور قصيرة → **422** مع أخطاء الحقول.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"X\",\n  \"last_name\": \"Y\",\n  \"password\": \"short\",\n  \"password_confirmation\": \"short\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — super@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **المدير الأعلى** وحفظ التوكن في المتغير `token_super` والـ uuid في `uuid_super`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"super@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_super\", j.access_token);",
+                  "pm.collectionVariables.set(\"uuid_super\", j.data.uuid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — admin@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مدير المنصة (عام)** وحفظ التوكن في المتغير `token_admin` والـ uuid في `uuid_admin`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_admin\", j.access_token);",
+                  "pm.collectionVariables.set(\"uuid_admin\", j.data.uuid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — admin.sy@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مدير المنصة بنطاق سوريا** وحفظ التوكن في المتغير `token_admin_sy`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin.sy@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_admin_sy\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — admin.damascus@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مدير المنصة بنطاق منطقة دمشق** وحفظ التوكن في المتغير `token_admin_damascus`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin.damascus@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_admin_damascus\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — orgadmin@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مسؤول المؤسسة** وحفظ التوكن في المتغير `token_orgadmin`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"orgadmin@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_orgadmin\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — officer@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مسؤول البرامج** وحفظ التوكن في المتغير `token_officer`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"officer@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_officer\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — dual@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مستخدم بدورين (learner + platform_admin)** وحفظ التوكن في المتغير `token_dual`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"dual@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_dual\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — learner@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **متعلم** وحفظ التوكن في المتغير `token_learner` والـ uuid في `uuid_learner`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"learner@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_learner\", j.access_token);",
+                  "pm.collectionVariables.set(\"uuid_learner\", j.data.uuid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — member@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **عضو المؤسسة (هدف)** وحفظ التوكن في المتغير `token_member` والـ uuid في `uuid_member`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"member@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_member\", j.access_token);",
+                  "pm.collectionVariables.set(\"uuid_member\", j.data.uuid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — aleppo@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مستخدم من حلب (هدف)** وحفظ التوكن في المتغير `token_aleppo` والـ uuid في `uuid_aleppo`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"aleppo@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_aleppo\", j.access_token);",
+                  "pm.collectionVariables.set(\"uuid_aleppo\", j.data.uuid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — germany@demo.test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تسجيل دخول **مستخدم من ألمانيا (هدف)** وحفظ التوكن في المتغير `token_germany` والـ uuid في `uuid_germany`.\n\nكل تسجيل دخول ينشئ جلسة جديدة (user_sessions) نطاقها الفعّال = **العام** وسياقها = السياق الافتراضي للمستخدم.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"germany@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_germany\", j.access_token);",
+                  "pm.collectionVariables.set(\"uuid_germany\", j.data.uuid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — كلمة مرور خاطئة (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "**401** بيانات دخول غير صحيحة. كل محاولة فاشلة تزيد failed_login_count، وبعد 5 محاولات يُقفل الحساب 15 دقيقة (423).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"officer@demo.test\",\n  \"password\": \"wrong-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login — حساب موقوف (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "حساب حالته `suspended` → **403** الحساب غير مفعل.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"suspended@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · Me — صلاحياتي (GET /me/permissions)",
+      "description": "**GET /me/permissions** — الصلاحيات الفعلية في السياق والنطاق الفعّالين، لتُظهر الواجهة الأزرار المناسبة.\n\nالاستجابة: `context` · `scope` · `is_super_admin` · `roles` (مع counted = هل دخل الحساب في السياق الحالي) · `permissions` · `mfa_required` · `mfa`.\nالصلاحيات الفعلية = أدوار النطاق العام ∪ أدوار النطاق الفعّال، مفلترة بالسياق (الذاتية تسري دائمًا).",
+      "item": [
+        {
+          "name": "Permissions — بدون توكن (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "بدون Authorization → **401**.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Permissions — learner (9 ذاتية)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "المتعلم يملك 9 صلاحيات ذاتية فقط (profile/sessions/notifications/... _own + success_stories.view).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 9\", () => pm.expect(d.permissions.length).to.eql(9));",
+                  "pm.test(\"السياق = learning\", () => pm.expect(d.context && d.context.key).to.eql(\"learning\"));",
+                  "pm.test(\"النطاق = global\", () => pm.expect(d.scope.type).to.eql(\"global\"));",
+                  "pm.test(\"يملك profile.view_own\", () => pm.expect(d.permissions).to.include(\"profile.view_own\"));",
+                  "pm.test(\"يملك region_changes.create_own\", () => pm.expect(d.permissions).to.include(\"region_changes.create_own\"));",
+                  "pm.test(\"لا يملك users.view_any\", () => pm.expect(d.permissions).to.not.include(\"users.view_any\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Permissions — platform_admin عام (53)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "مدير المنصة بنطاق عام: كل الصلاحيات عدا `audit_log.view_restricted` و `metrics.view_financial` (53). لاحظ قائمة `mfa_required`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 53\", () => pm.expect(d.permissions.length).to.eql(53));",
+                  "pm.test(\"السياق = administration\", () => pm.expect(d.context && d.context.key).to.eql(\"administration\"));",
+                  "pm.test(\"النطاق = global\", () => pm.expect(d.scope.type).to.eql(\"global\"));",
+                  "pm.test(\"يملك users.export\", () => pm.expect(d.permissions).to.include(\"users.export\"));",
+                  "pm.test(\"يملك countries.manage\", () => pm.expect(d.permissions).to.include(\"countries.manage\"));",
+                  "pm.test(\"لا يملك audit_log.view_restricted\", () => pm.expect(d.permissions).to.not.include(\"audit_log.view_restricted\"));",
+                  "pm.test(\"is_super_admin = false\", () => pm.expect(d.is_super_admin).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Permissions — super_admin (55)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "المدير الأعلى في النطاق العام: كل الـ 55 صلاحية و `is_super_admin = true`.\nكل استخدام لتجاوز super_admin يُسجَّل في activity_log (log_name = rbac, event = super_admin_bypass).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_super}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 55\", () => pm.expect(d.permissions.length).to.eql(55));",
+                  "pm.test(\"السياق = administration\", () => pm.expect(d.context && d.context.key).to.eql(\"administration\"));",
+                  "pm.test(\"النطاق = global\", () => pm.expect(d.scope.type).to.eql(\"global\"));",
+                  "pm.test(\"يملك audit_log.view_restricted\", () => pm.expect(d.permissions).to.include(\"audit_log.view_restricted\"));",
+                  "pm.test(\"is_super_admin = true\", () => pm.expect(d.is_super_admin).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Permissions — program_officer (21)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "مسؤول البرامج: مؤشرات، تقارير، قصص النجاح، عرض المستخدمين والمؤسسات وسياسات المناطق (21).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_officer}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 21\", () => pm.expect(d.permissions.length).to.eql(21));",
+                  "pm.test(\"السياق = program_management\", () => pm.expect(d.context && d.context.key).to.eql(\"program_management\"));",
+                  "pm.test(\"النطاق = global\", () => pm.expect(d.scope.type).to.eql(\"global\"));",
+                  "pm.test(\"يملك dashboard.view\", () => pm.expect(d.permissions).to.include(\"dashboard.view\"));",
+                  "pm.test(\"يملك region_policies.view\", () => pm.expect(d.permissions).to.include(\"region_policies.view\"));",
+                  "pm.test(\"لا يملك users.update\", () => pm.expect(d.permissions).to.not.include(\"users.update\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Permissions — admin.sy قبل تفعيل نطاقه (0)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "دوره مُسنَد بنطاق **دولة سوريا** فقط، والنطاق الفعّال بعد الدخول = العام → **لا صلاحيات** حتى يفعّل نطاقه (المجلد 03).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_sy}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 0\", () => pm.expect(d.permissions.length).to.eql(0));",
+                  "pm.test(\"النطاق = global\", () => pm.expect(d.scope.type).to.eql(\"global\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Permissions — dual في سياق learning (9)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "يملك learner و platform_admin، لكن السياق الافتراضي = learning → دور الإدارة **لا يُحسب** (counted = false) والصلاحيات الذاتية فقط.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_dual}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 9\", () => pm.expect(d.permissions.length).to.eql(9));",
+                  "pm.test(\"السياق = learning\", () => pm.expect(d.context && d.context.key).to.eql(\"learning\"));",
+                  "pm.test(\"النطاق = global\", () => pm.expect(d.scope.type).to.eql(\"global\"));",
+                  "pm.test(\"لا يملك users.view_any\", () => pm.expect(d.permissions).to.not.include(\"users.view_any\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 · Me — النطاق والسياق (GET /me/scopes · POST /me/scope)",
+      "description": "**GET /me/scopes** — النطاقات التي لي فيها أدوار (العام دائمًا)، و `meta.contexts` سياقاتي النشطة.\n**POST /me/scope** — `{\"scope_id\": N, \"context\": \"key\"?}` يفعّل نطاقًا (وسياقًا اختياريًا) للجلسة الحالية ويعيد الصلاحيات الجديدة. يُسجَّل في activity_log (auth / scope_switched).",
+      "item": [
+        {
+          "name": "Scopes — admin.sy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scopes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scopes"
+              ]
+            },
+            "description": "يعرض: النطاق العام (بلا أدوار) + نطاق دولة سوريا (platform_admin). يحفظ معرّف نطاق سوريا في `scope_sy`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_sy}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json().data.find(x => x.type === 'country');",
+                  "pm.test(\"نطاق الدولة موجود\", () => pm.expect(s).to.be.an('object'));",
+                  "pm.collectionVariables.set('scope_sy', s.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch — admin.sy → نطاق سوريا (45)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scope",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scope"
+              ]
+            },
+            "description": "بعد التفعيل: 53 − 8 صلاحيات إعداد عام (خلية G: الدول، المناطق، اللغات، الترجمات، سياسات المناطق، أنواع/قوالب الإشعارات، users.export) = **45**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_sy}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope_id\": \"{{scope_sy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 45\", () => pm.expect(d.permissions.length).to.eql(45));",
+                  "pm.test(\"السياق = administration\", () => pm.expect(d.context && d.context.key).to.eql(\"administration\"));",
+                  "pm.test(\"النطاق = country\", () => pm.expect(d.scope.type).to.eql(\"country\"));",
+                  "pm.test(\"يملك users.view_any\", () => pm.expect(d.permissions).to.include(\"users.view_any\"));",
+                  "pm.test(\"لا يملك countries.manage\", () => pm.expect(d.permissions).to.not.include(\"countries.manage\"));",
+                  "pm.test(\"لا يملك users.export\", () => pm.expect(d.permissions).to.not.include(\"users.export\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Scopes — admin.damascus",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scopes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scopes"
+              ]
+            },
+            "description": "يحفظ معرّف نطاق منطقة دمشق في `scope_damascus`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_damascus}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json().data.find(x => x.type === 'region');",
+                  "pm.collectionVariables.set('scope_damascus', s.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch — admin.damascus → منطقة دمشق",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scope",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scope"
+              ]
+            },
+            "description": "تفعيل نطاق المنطقة.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_damascus}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope_id\": \"{{scope_damascus}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 45\", () => pm.expect(d.permissions.length).to.eql(45));",
+                  "pm.test(\"السياق = administration\", () => pm.expect(d.context && d.context.key).to.eql(\"administration\"));",
+                  "pm.test(\"النطاق = region\", () => pm.expect(d.scope.type).to.eql(\"region\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Scopes — orgadmin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scopes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scopes"
+              ]
+            },
+            "description": "النطاق العام (learner) + نطاق المؤسسة (organization_admin) مع uuid واسم المؤسسة. السياقات: learning (افتراضي) و organization.\nيحفظ `scope_org` و `org_uuid`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_orgadmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const s = j.data.find(x => x.type === 'organization');",
+                  "pm.collectionVariables.set('scope_org', s.id);",
+                  "pm.collectionVariables.set('org_uuid', s.organization.uuid);",
+                  "pm.test(\"سياق organization متاح\", () => pm.expect(j.meta.contexts.map(c => c.key)).to.include('organization'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch — orgadmin → المؤسسة بدون سياق (9)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scope",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scope"
+              ]
+            },
+            "description": "النطاق وحده لا يكفي: السياق ما زال learning ودور organization_admin سياقه organization → لا يُحسب (FR-AUTH-016).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_orgadmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope_id\": \"{{scope_org}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 9\", () => pm.expect(d.permissions.length).to.eql(9));",
+                  "pm.test(\"السياق = learning\", () => pm.expect(d.context && d.context.key).to.eql(\"learning\"));",
+                  "pm.test(\"النطاق = organization\", () => pm.expect(d.scope.type).to.eql(\"organization\"));",
+                  "pm.test(\"لا يملك organization_members.invite\", () => pm.expect(d.permissions).to.not.include(\"organization_members.invite\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch — orgadmin → المؤسسة + سياق organization (27)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scope",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scope"
+              ]
+            },
+            "description": "الآن تُحسب صلاحيات مسؤول المؤسسة داخل مؤسسته: 9 ذاتية + 18 = **27** (مطابق للمصفوفة).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_orgadmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope_id\": \"{{scope_org}}\",\n  \"context\": \"organization\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 27\", () => pm.expect(d.permissions.length).to.eql(27));",
+                  "pm.test(\"السياق = organization\", () => pm.expect(d.context && d.context.key).to.eql(\"organization\"));",
+                  "pm.test(\"النطاق = organization\", () => pm.expect(d.scope.type).to.eql(\"organization\"));",
+                  "pm.test(\"يملك organization_members.invite\", () => pm.expect(d.permissions).to.include(\"organization_members.invite\"));",
+                  "pm.test(\"يملك roles.assign\", () => pm.expect(d.permissions).to.include(\"roles.assign\"));",
+                  "pm.test(\"يملك reports.donor_view\", () => pm.expect(d.permissions).to.include(\"reports.donor_view\"));",
+                  "pm.test(\"لا يملك users.create\", () => pm.expect(d.permissions).to.not.include(\"users.create\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch — نطاق لا أملك فيه دورًا (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scope",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scope"
+              ]
+            },
+            "description": "نطاق غير موجود ضمن نطاقاتي → **422**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_orgadmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope_id\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch — سياق لا أملكه (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scope",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scope"
+              ]
+            },
+            "description": "orgadmin لا يملك سياق administration → **422**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_orgadmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope_id\": \"{{scope_org}}\",\n  \"context\": \"administration\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 · عزل السياق (ContextIsolation)",
+      "description": "مستخدم بدورين لا يرى شاشات الإدارة وهو في سياق learning، ويراها بعد تفعيل سياق administration.",
+      "item": [
+        {
+          "name": "dual في learning → شاشة إدارة (403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "صلاحية sessions.view_any موجودة في دوره لكن دوره لا يُحسب في سياق learning → **403**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_dual}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch — dual → سياق administration (53)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/scope",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "scope"
+              ]
+            },
+            "description": "تفعيل النطاق العام مع سياق الإدارة.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_dual}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope_id\": 1,\n  \"context\": \"administration\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"عدد الصلاحيات = 53\", () => pm.expect(d.permissions.length).to.eql(53));",
+                  "pm.test(\"السياق = administration\", () => pm.expect(d.context && d.context.key).to.eql(\"administration\"));",
+                  "pm.test(\"النطاق = global\", () => pm.expect(d.scope.type).to.eql(\"global\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "dual في administration → شاشة إدارة (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "نفس الطلب يعمل الآن.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_dual}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 · Me — جلساتي (/me/sessions)",
+      "description": "إدارة جلسات المستخدم الحالي (FR-AUTH-024/025). صلاحيات ذاتية: sessions.view_own / sessions.revoke_own.",
+      "item": [
+        {
+          "name": "My sessions — admin (يحفظ id جلسة)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "sessions"
+              ]
+            },
+            "description": "**GET /me/sessions** — جلساتي النشطة، والحقل `current` يحدد جلسة التوكن الحالي. يحفظ id جلسة admin في `admin_session_id`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json().data;",
+                  "pm.test(\"جلسة حالية موجودة\", () => pm.expect(j.some(s => s.current)).to.be.true);",
+                  "pm.collectionVariables.set('admin_session_id', j.find(s => s.current).id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke جلسة مستخدم آخر (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/sessions/{{admin_session_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{admin_session_id}}"
+              ]
+            },
+            "description": "**DELETE /me/sessions/{id}** — learner يحاول إنهاء جلسة admin → **404** (لا نكشف وجودها).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke other sessions — learner",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/sessions/others",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "others"
+              ]
+            },
+            "description": "**DELETE /me/sessions/others** — إنهاء كل جلساتي عدا الحالية → **204**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My sessions — learner (جلسة واحدة)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "sessions"
+              ]
+            },
+            "description": "بعد إنهاء الأخرى تبقى الجلسة الحالية فقط.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"جلسة واحدة\", () => pm.expect(pm.response.json().data.length).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 · Admin — جلسات المستخدمين + فلتر النطاق",
+      "description": "**GET /admin/users/{uuid}/sessions** (sessions.view_any) و **DELETE /admin/users/{uuid}/sessions** (sessions.revoke_any + MFA).\nيطبّق ScopeGuard: عام = الكل · دولة = مستخدمو الدولة · منطقة = المنطقة وما تحتها · خارج النطاق = **404** · بلا صلاحية = **403**.",
+      "item": [
+        {
+          "name": "learner → جلسات مستخدم (403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "لا يملك sessions.view_any → **403** (إخفاء الزر لا يكفي، المنع على الـ API).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "officer → جلسات مستخدم (403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "program_officer لا يملك sessions.view_any → **403**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_officer}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "admin عام → مستخدم ألمانيا (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "النطاق العام يرى الجميع.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "super_admin → مستخدم ألمانيا (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "المدير الأعلى في النطاق العام.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_super}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "admin.sy → مستخدم حلب (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_aleppo}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_aleppo}}",
+                "sessions"
+              ]
+            },
+            "description": "حلب داخل سوريا → مسموح.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_sy}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "admin.sy → مستخدم ألمانيا (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "خارج نطاق الدولة → **404**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_sy}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "admin.damascus → عضو دمشق (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_member}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_member}}",
+                "sessions"
+              ]
+            },
+            "description": "المستخدم في دمشق → داخل نطاق المنطقة.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_damascus}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "admin.damascus → مستخدم حلب (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_aleppo}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_aleppo}}",
+                "sessions"
+              ]
+            },
+            "description": "حلب ليست ضمن شجرة دمشق → **404**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_damascus}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke — بدون سبب (422)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_aleppo}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_aleppo}}",
+                "sessions"
+              ]
+            },
+            "description": "الحقل `reason` إلزامي → **422**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke — admin.sy خارج النطاق (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_germany}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_germany}}",
+                "sessions"
+              ]
+            },
+            "description": "إنهاء جلسات مستخدم خارج نطاق الدولة → **404**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin_sy}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke — admin عام → مستخدم حلب (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_aleppo}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_aleppo}}",
+                "sessions"
+              ]
+            },
+            "description": "ينهي كل جلسات المستخدم ويسجّل في activity_log (security / sessions_revoked_by_admin).\nsessions.revoke_any تتطلب MFA → في وضع warn تُسمح ويُسجَّل تحذير (security / mfa_required). مع `SOLARIS_MFA_MODE=enforce` → 403.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Suspicious activity (Postman test)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "توكن حلب بعد الإنهاء (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "التوكن الذي أُنهيت جلسته لم يعد صالحًا → **401**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aleppo}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 · Auth — الخروج",
+      "description": "إلغاء التوكن الحالي.",
+      "item": [
+        {
+          "name": "Logout — member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "**POST /auth/logout** — يلغي التوكن الحالي ويغلق جلسته (revoke_reason = logout) → **200**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_member}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "بعد الخروج (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "التوكن الملغى → **401**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_member}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout — بدون توكن (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "→ **401**.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

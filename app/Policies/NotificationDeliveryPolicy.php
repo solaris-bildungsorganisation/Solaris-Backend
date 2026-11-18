@@ -6,61 +6,44 @@ use App\Models\NotificationDelivery;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * متابعة إرسال الإشعارات — FR-COM-008, 009. فلتر النطاق: مستخدمو النطاق (عبر user_id).
+ * السجلات يكتبها النظام فقط؛ لا إنشاء أو تعديل من الـ API.
+ */
 class NotificationDeliveryPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'notification_deliveries.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, NotificationDelivery $notificationDelivery): bool
+    public function view(User $user, NotificationDelivery $delivery): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'notification_deliveries.view', $delivery);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $user): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, NotificationDelivery $notificationDelivery): bool
+    public function update(User $user, NotificationDelivery $delivery): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, NotificationDelivery $notificationDelivery): bool
+    public function delete(User $user, NotificationDelivery $delivery): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, NotificationDelivery $notificationDelivery): bool
+    public function restore(User $user, NotificationDelivery $delivery): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, NotificationDelivery $notificationDelivery): bool
+    public function forceDelete(User $user, NotificationDelivery $delivery): Response
     {
-        return false;
+        return Response::deny();
     }
 }

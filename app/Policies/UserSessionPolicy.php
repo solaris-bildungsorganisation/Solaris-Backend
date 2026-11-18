@@ -6,14 +6,15 @@ use App\Models\User;
 use App\Models\UserSession;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * الجلسات — FR-AUTH-024, 025.
+ *  - جلساتي: sessions.view_own / sessions.revoke_own (جلسة مستخدم آخر = 404).
+ *  - جلسات المستخدمين: sessions.view_any / sessions.revoke_any (MFA) — فلتر النطاق: مستخدمو النطاق (ScopeGuard).
+ */
 class UserSessionPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-
         return $user->can('sessions.view_own');
     }
 
@@ -35,23 +36,11 @@ class UserSessionPolicy
 
     public function viewForUser(User $admin, User $target): Response
     {
-        if (! $admin->can('sessions.view_any')) {
-            return Response::deny();
-        }
-
-        return $admin->country_id === $target->country_id
-            ? Response::allow()
-            : Response::denyAsNotFound();
+        return ScopeGuard::authorize($admin, 'sessions.view_any', $target);
     }
 
     public function revokeForUser(User $admin, User $target): Response
     {
-        if (! $admin->can('sessions.revoke_any')) {
-            return Response::deny();
-        }
-
-        return $admin->country_id === $target->country_id
-            ? Response::allow()
-            : Response::denyAsNotFound();
+        return ScopeGuard::authorize($admin, 'sessions.revoke_any', $target, 'sessions.view_any');
     }
 }

@@ -6,61 +6,50 @@ use App\Models\User;
 use App\Models\UserLanguage;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * لغات المستخدم (جزء من الملف الشخصي) — FR-AUTH-018 · FR-I18N.
+ * صاحبها يديرها (profile.update_own)، والمسؤول يراها ضمن users.view ونطاقه.
+ */
 class UserLanguagePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'profile.view_own');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, UserLanguage $userLanguage): bool
+    public function view(User $user, UserLanguage $language): Response
     {
-        return false;
+        if ($language->user_id === $user->getKey()) {
+            return ScopeGuard::authorize($user, 'profile.view_own');
+        }
+
+        return ScopeGuard::authorize($user, 'users.view', $language);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'profile.update_own');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, UserLanguage $userLanguage): bool
+    public function update(User $user, UserLanguage $language): Response
     {
-        return false;
+        return $language->user_id === $user->getKey()
+            ? ScopeGuard::authorize($user, 'profile.update_own')
+            : Response::denyAsNotFound();
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, UserLanguage $userLanguage): bool
+    public function delete(User $user, UserLanguage $language): Response
     {
-        return false;
+        return $this->update($user, $language);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, UserLanguage $userLanguage): bool
+    public function restore(User $user, UserLanguage $language): Response
     {
-        return false;
+        return $this->update($user, $language);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, UserLanguage $userLanguage): bool
+    public function forceDelete(User $user, UserLanguage $language): Response
     {
-        return false;
+        return $this->update($user, $language);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\VisibleWithinScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AccountTypeRequest extends Model
 {
-    use HasUuids;
+    use HasUuids, VisibleWithinScope;
 
     /** حقول المراجعة (status, reviewed_by, reviewed_at, granted_scope_id) تُضبط من خدمة المراجعة فقط */
     protected $fillable = [
