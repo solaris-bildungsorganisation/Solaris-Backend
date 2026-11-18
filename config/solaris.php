@@ -20,4 +20,13 @@ return [
     ],
     'session_lifetime_days' => 30,
 
+    /*
+    | حارس MFA للصلاحيات requires_mfa (NFR-SEC-002) — القرار D8.
+    |   warn    : (الموجة 1، حتى تنفيذ FA2) يُسمح بالعملية ويُسجَّل تحذير في activity_log.
+    |   enforce : تُرفض العملية (403) ما لم يكن لدى المستخدم MFA مؤكَّد.
+    */
+    'mfa' => [
+        'mode' => env('SOLARIS_MFA_MODE', 'warn'),
+    ],
+
 ];
