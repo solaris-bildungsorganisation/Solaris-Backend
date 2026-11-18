@@ -18,6 +18,7 @@ class SessionTest extends TestCase
         $token = $user->createToken('test');
         $session = $user->sessions()->create(array_merge([
             'personal_access_token_id' => $token->accessToken->id,
+            'active_scope_id'=>config('solaris.global_scope_id'),
             'last_activity_at' => now(),
             'expires_at' => now()->addDay(),
         ], $attrs));
