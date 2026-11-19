@@ -13,13 +13,13 @@ class PlatformNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 3;
-
     /**
-     * @param  array<int, string>  $channels
-     * @param  array<string, array{subject?: ?string, title?: ?string, body: string, action_url?: ?string}>  $renderedTemplates
-     * @param  array<string, mixed>  $data
-     * @param  array<string, mixed>  $options
+     * @param string $notificationUuid
+     * @param string $typeKey
+     * @param array<int, string> $channels
+     * @param array<string, array{subject: ?string, body: string}> $renderedTemplates
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $options
      */
     public function __construct(
         string $notificationUuid,
@@ -30,32 +30,23 @@ class PlatformNotification extends Notification implements ShouldQueue
         private readonly array $options = [],
     ) {
         $this->id = $notificationUuid;
-        $this->onQueue('notifications');
-    }
-
-    public function backoff(): array
-    {
-        return [60, 300];
     }
 
     public function via(object $notifiable): array
     {
         unset($notifiable);
-
         return $this->channels;
     }
 
     public function toDatabase(object $notifiable): array
     {
         unset($notifiable);
-
-        $inApp = $this->renderedTemplates['database'] ?? ['body' => ''];
+        $inApp = $this->renderedTemplates['database'] ?? ['subject' => null, 'body' => ''];
 
         return [
             'type' => $this->typeKey,
-            'title' => $inApp['title'] ?? $inApp['subject'] ?? null,
+            'subject' => $inApp['subject'],
             'body' => $inApp['body'],
-            'action_url' => $inApp['action_url'] ?? ($this->data['action_url'] ?? null),
             'data' => $this->removeSecrets($this->data),
         ];
     }
@@ -63,14 +54,13 @@ class PlatformNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         unset($notifiable);
-
         $mail = $this->renderedTemplates['mail'] ?? ['subject' => '', 'body' => ''];
 
-        $message = (new MailMessage)
+        $message = (new MailMessage())
             ->subject((string) ($mail['subject'] ?? ''))
             ->line((string) ($mail['body'] ?? ''));
 
-        if (! empty($this->options['secret'])) {
+        if (!empty($this->options['secret'])) {
             $message->line((string) $this->options['secret']);
         }
 
@@ -89,13 +79,12 @@ class PlatformNotification extends Notification implements ShouldQueue
         ];
 
         foreach ($value as $key => $item) {
-            if (is_string($key) && in_array(strtolower($key), $secretKeys, true)) {
+            if (\is_string($key) && \in_array(strtolower($key), $secretKeys, true)) {
                 unset($value[$key]);
-
                 continue;
             }
 
-            if (is_array($item)) {
+            if (\is_array($item)) {
                 $value[$key] = $this->removeSecrets($item);
             }
         }

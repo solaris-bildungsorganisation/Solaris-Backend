@@ -6,13 +6,21 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /** notification_templates — قالب لكل نوع × قناة × لغة × إصدار. المتغيرات بصيغة {{ name }}. */
 class NotificationTemplate extends Model
 {
+    use HasFactory;
     protected $fillable = [
-        'notification_type_id', 'channel_id', 'language_id',
-        'subject', 'body', 'version', 'is_active', 'updated_by',
+        'notification_type_id',
+        'channel_id',
+        'language_id',
+        'subject',
+        'body',
+        'version',
+        'is_active',
+        'updated_by',
     ];
 
     protected function casts(): array
