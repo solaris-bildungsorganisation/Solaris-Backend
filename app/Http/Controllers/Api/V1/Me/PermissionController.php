@@ -23,8 +23,7 @@ class PermissionController extends Controller
         tags: ['Me'],
         summary: 'صلاحياتي الفعلية في السياق والنطاق الفعّالين',
         description: 'الصلاحيات الفعلية = أدوار النطاق العام ∪ أدوار النطاق الفعّال، مفلترة بالسياق الفعّال (الصلاحيات الذاتية تسري دائمًا). '
-            .'mfa_required: الصلاحيات التي تتطلب MFA (في وضع warn تُسمح مع تسجيل تحذير — القرار D8). '
-            .'mfa.confirmed = للجلسة تحقق 2FA حديث (step-up خلال 15 دقيقة عبر POST /v1/me/2fa/verify)؛ mfa.enforced = الرفض مفعّل لهذا المستخدم.',
+            .'mfa_required: الصلاحيات التي تتطلب MFA (في وضع warn تُسمح مع تسجيل تحذير — القرار D8).',
         security: [['bearerAuth' => []]],
         responses: [
             new OA\Response(
@@ -42,7 +41,7 @@ class PermissionController extends Controller
                             ],
                             'permissions' => ['dashboard.view', 'profile.view_own', 'users.update_status', 'users.view', 'users.view_any'],
                             'mfa_required' => ['users.update_status'],
-                            'mfa' => ['mode' => 'warn', 'enforced' => false, 'two_factor_enabled' => true, 'confirmed' => false],
+                            'mfa' => ['mode' => 'warn', 'confirmed' => false],
                         ],
                     ],
                 ),
@@ -83,12 +82,7 @@ class PermissionController extends Controller
                 ], $access->roles),
                 'permissions' => $permissions,
                 'mfa_required' => array_values(array_filter($permissions, fn (string $p) => RbacCatalog::requiresMfa($p))),
-                'mfa' => [
-                    'mode' => $mfa->mode(),
-                    'enforced' => $mfa->enforcedFor($user),
-                    'two_factor_enabled' => $mfa->enabled($user),
-                    'confirmed' => $mfa->satisfied($user),
-                ],
+                'mfa' => ['mode' => $mfa->mode(), 'confirmed' => $mfa->satisfied($user)],
             ],
         ]);
     }
