@@ -18,6 +18,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
+use Illuminate\Support\Facades\Queue;
 
 class NotificationServiceTest extends TestCase
 {
@@ -184,6 +185,7 @@ class NotificationServiceTest extends TestCase
 
     public function test_creates_delivery_per_channel_and_keeps_secret_out_of_database(): void
     {
+        Queue::fake();
         $user = User::factory()->create(['interface_language_id' => $this->arabic->id]);
         $type = NotificationType::where('key', 'account.verification_code')->firstOrFail();
         $emailChannel = NotificationChannel::where('key', 'email')->firstOrFail();
