@@ -19,6 +19,7 @@ class SessionTest extends TestCase
         $token = $user->createToken('test');
         $session = $user->sessions()->create(array_merge([
             'personal_access_token_id' => $token->accessToken->id,
+            'active_scope_id'=>config('solaris.global_scope_id'),
             'last_activity_at' => now(),
             'expires_at' => now()->addDay(),
         ], $attrs));
@@ -90,4 +91,22 @@ class SessionTest extends TestCase
             ->getJson('/api/v1/admin/users/'.$otherCountry->uuid.'/sessions')
             ->assertNotFound();
     }
+
+
+public function test_revoke_stores_revocation_fields(): void
+    {
+        $user = User::factory()->create();
+        [, $session] = $this->loginAs($user);
+
+        app(SessionService::class)->revoke($session, $user, 'logout');
+
+        $session->refresh();
+
+        $this->assertNotNull($session->revoked_at);
+        $this->assertSame($user->id, $session->revoked_by);
+        $this->assertSame('logout', $session->revoke_reason);
+    }
+
+
+
 }
