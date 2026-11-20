@@ -23,6 +23,16 @@ class SessionService
         ]);
     }
 
+    /** جلسة التوكن الحالي للطلب (null للتوكنات القديمة قبل نظام الجلسات). */
+    public function current(User $user): ?UserSession
+    {
+        $tokenId = $user->currentAccessToken()?->id;
+
+        return $tokenId
+            ? $user->sessions()->where('personal_access_token_id', $tokenId)->first()
+            : null;
+    }
+
     public function revoke(UserSession $session, ?User $by, string $reason): void
     {
         DB::transaction(function () use ($session, $by, $reason) {
