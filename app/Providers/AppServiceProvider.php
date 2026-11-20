@@ -35,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->make(ChannelManager::class)->extend('sms', fn () => $this->app->make(SmsChannel::class));
         $this->registerAuthorizationGate();
+        Gate::policy(\Illuminate\Notifications\DatabaseNotification::class, \App\Policies\NotificationPolicy::class);
     }
 
     /**
