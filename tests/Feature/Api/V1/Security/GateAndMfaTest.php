@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\V1\Security;
 
 use App\Models\AccessScope;
 use App\Models\User;
+use App\Services\Auth\StepUpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,10 @@ class GateAndMfaTest extends TestCase
         $this->assertTrue($admin->can('users.view_any'));
 
         $admin->forceFill(['two_factor_confirmed_at' => now()])->save();
+        $this->flushAccess();
+        $this->assertFalse($admin->can('users.update_status'), 'K2: 2FA مفعّل وحده لا يكفي — يلزم تحقق حديث للجلسة');
+
+        app(StepUpService::class)->mark($admin);
         $this->flushAccess();
         $this->assertTrue($admin->can('users.update_status'));
     }

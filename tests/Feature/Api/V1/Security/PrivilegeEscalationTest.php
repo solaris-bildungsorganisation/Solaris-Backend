@@ -6,6 +6,7 @@ use App\Models\AccessScope;
 use App\Models\AccountTypeRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Auth\StepUpService;
 use App\Services\Rbac\RoleAssignmentException;
 use App\Services\Rbac\RoleAssignmentService;
 use Illuminate\Database\QueryException;
@@ -173,6 +174,7 @@ class PrivilegeEscalationTest extends TestCase
             fn () => $this->service->assign($admin, User::factory()->create(), 'mentor', $this->globalScope()));
 
         $admin->forceFill(['two_factor_confirmed_at' => now()])->save();
+        app(StepUpService::class)->mark($admin); // K2: تحقق حديث للجلسة
         $this->flushAccess();
         $this->service->assign($admin, $target = User::factory()->create(), 'mentor', $this->globalScope());
         $this->assertTrue(DB::table('model_has_roles')->where('model_id', $target->id)->exists());
