@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Services\Rbac\AccessResolver;
-
 use Illuminate\Auth\Access\Response;
 
 /**
@@ -85,6 +84,24 @@ class UserPolicy
     public function viewAuthEvents(User $user, User $target): Response
     {
         return ScopeGuard::authorize($user, 'auth_events.view', $target, 'users.view');
+    }
+
+    /** K1: حالة التحقق الثنائي لحسابي (GET /me/2fa) — إعداد أمني ذاتي ضمن profile.view_own. */
+    public function viewTwoFactor(User $user): Response
+    {
+        return ScopeGuard::authorize($user, 'profile.view_own');
+    }
+
+    /** K1: تفعيل/تأكيد/تعطيل 2FA وإعادة توليد رموز الاسترداد لحسابي فقط — ضمن profile.update_own. */
+    public function manageTwoFactor(User $user): Response
+    {
+        return ScopeGuard::authorize($user, 'profile.update_own');
+    }
+
+    /** K2: التحقق الإضافي (step-up) لجلستي (POST /me/2fa/verify) — ضمن profile.view_own. */
+    public function verifyTwoFactor(User $user): Response
+    {
+        return ScopeGuard::authorize($user, 'profile.view_own');
     }
 
     private function sensitiveAction(User $user, User $target, string $permission): Response
