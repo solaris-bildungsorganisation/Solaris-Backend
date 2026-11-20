@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\SmsProvider;
 use App\Models\AccessScope;
 use App\Models\User;
+use App\Notifications\Channels\SafeBroadcastChannel;
 use App\Notifications\Channels\SmsChannel;
 use App\Services\Notifications\LogSmsProvider;
 use App\Services\Rbac\AccessResolver;
@@ -34,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->app->make(ChannelManager::class)->extend('sms', fn () => $this->app->make(SmsChannel::class));
+        $this->app->make(ChannelManager::class)->extend('broadcast', fn () => $this->app->make(SafeBroadcastChannel::class));
         $this->registerAuthorizationGate();
     }
 
