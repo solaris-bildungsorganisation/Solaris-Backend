@@ -2,15 +2,11 @@
 
 namespace App\Providers;
 
-use App\Contracts\SmsProvider;
 use App\Models\AccessScope;
 use App\Models\User;
-use App\Notifications\Channels\SmsChannel;
-use App\Services\Notifications\LogSmsProvider;
 use App\Services\Rbac\AccessResolver;
 use App\Services\Rbac\MfaGuard;
 use Database\Seeders\Rbac\RbacCatalog;
-use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,8 +20,6 @@ class AppServiceProvider extends ServiceProvider
         // نسخة واحدة لكل طلب (scoped: تُفرَّغ بين الطلبات في Octane والـ Queue)
         $this->app->scoped(AccessResolver::class);
         $this->app->scoped(MfaGuard::class);
-
-        $this->app->bind(SmsProvider::class, LogSmsProvider::class);
     }
 
     /**
@@ -33,7 +27,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->app->make(ChannelManager::class)->extend('sms', fn () => $this->app->make(SmsChannel::class));
         $this->registerAuthorizationGate();
     }
 

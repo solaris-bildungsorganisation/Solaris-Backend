@@ -19,19 +19,8 @@ class SessionService
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'last_activity_at' => now(),
-            'active_scope_id'=>config('solaris.global_scope_id'),
             'expires_at' => now()->addDays(config('solaris.session_lifetime_days')),
         ]);
-    }
-
-    /** جلسة التوكن الحالي للطلب (null للتوكنات القديمة قبل نظام الجلسات). */
-    public function current(User $user): ?UserSession
-    {
-        $tokenId = $user->currentAccessToken()?->id;
-
-        return $tokenId
-            ? $user->sessions()->where('personal_access_token_id', $tokenId)->first()
-            : null;
     }
 
     public function revoke(UserSession $session, ?User $by, string $reason): void

@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -26,15 +25,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['user_id', 'language_id']);
-            $table->index(['user_id', 'proficiency']);
             $table->comment('FR-I18N-004 — كفاءة المستخدم اللغوية');
         });
-
-        DB::statement("
-            ALTER TABLE user_languages
-            ADD CONSTRAINT user_languages_proficiency_check
-            CHECK (proficiency IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'))
-        ");
 
         // FR-I18N-006: متطلبات اللغة لبرنامج/دورة/فرصة (polymorphic — الجداول الهدف تأتي في موجات لاحقة)
         Schema::create('language_requirements', function (Blueprint $table) {
