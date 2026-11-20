@@ -6,61 +6,63 @@ use App\Models\SuccessStory;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * قصص النجاح — FR-ADMIN-007.
+ *  - العرض العام: المنشورة فقط (success_stories.view).
+ *  - الإدارة/النشر: داخل النطاق (country_id / region_id / organization_id)، والنشر يتطلب الموافقة (consent).
+ */
 class SuccessStoryPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    private const PUBLISHABLE_CONSENT = ['granted', 'not_required'];
+
+    public function viewAny(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'success_stories.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, SuccessStory $successStory): bool
+    public function view(User $user, SuccessStory $story): Response
     {
-        return false;
+        if ($story->status === 'published' && $user->can('success_stories.view')) {
+            return Response::allow();
+        }
+
+        return ScopeGuard::authorize($user, 'success_stories.manage', $story);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'success_stories.manage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, SuccessStory $successStory): bool
+    public function update(User $user, SuccessStory $story): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'success_stories.manage', $story);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, SuccessStory $successStory): bool
+    public function delete(User $user, SuccessStory $story): Response
     {
-        return false;
+        return $this->update($user, $story);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, SuccessStory $successStory): bool
+    public function publish(User $user, SuccessStory $story): Response
     {
-        return false;
+        $decision = ScopeGuard::authorize($user, 'success_stories.publish', $story, 'success_stories.manage');
+        if ($decision->denied()) {
+            return $decision;
+        }
+
+        return in_array($story->consent_status, self::PUBLISHABLE_CONSENT, true)
+            ? Response::allow()
+            : Response::deny('لا يمكن النشر قبل تسجيل موافقة صاحب القصة.');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, SuccessStory $successStory): bool
+    public function restore(User $user, SuccessStory $story): Response
     {
-        return false;
+        return $this->update($user, $story);
+    }
+
+    public function forceDelete(User $user, SuccessStory $story): Response
+    {
+        return Response::deny();
     }
 }

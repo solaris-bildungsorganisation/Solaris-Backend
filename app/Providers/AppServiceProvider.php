@@ -2,7 +2,15 @@
 
 namespace App\Providers;
 
+use App\Contracts\SmsProvider;
+use App\Models\AccessScope;
 use App\Models\User;
+use App\Notifications\Channels\SmsChannel;
+use App\Services\Notifications\LogSmsProvider;
+use App\Services\Rbac\AccessResolver;
+use App\Services\Rbac\MfaGuard;
+use Database\Seeders\Rbac\RbacCatalog;
+use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,7 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // نسخة واحدة لكل طلب (scoped: تُفرَّغ بين الطلبات في Octane والـ Queue)
+        $this->app->scoped(AccessResolver::class);
+        $this->app->scoped(MfaGuard::class);
+
+        $this->app->bind(SmsProvider::class, LogSmsProvider::class);
     }
 
     /**
@@ -21,26 +33,54 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::before(function (User $user): ?bool {
-            $activeScopeId = session('active_scope_id');
+        $this->app->make(ChannelManager::class)->extend('sms', fn () => $this->app->make(SmsChannel::class));
+        $this->registerAuthorizationGate();
+    }
 
-            if ($activeScopeId === null) {
-                $activeScopeId = $user->currentSession()?->active_scope_id;
+    /**
+     * سلسلة التفويض الموحّدة (B4). تحل محل فحص spatie الافتراضي (register_permission_check_method = false).
+     *
+     * لكل ability هي اسم صلاحية من الكتالوج (مثل users.update_status):
+     *   1. حارس MFA (D8)                         → false يوقف العملية في وضع enforce
+     *   2. super_admin في النطاق العام فقط        → true + تسجيل في activity_log (log_name = rbac)
+     *   3. الصلاحيات الفعلية (AccessResolver)     → true أو null (= رفض لعدم وجود Gate معرّف)
+     *
+     * abilities الخاصة بالـ Policies (view, update, review ...) لا تُتجاوز هنا حتى لـ super_admin:
+     * الـ Policy تفرض القواعد الصلبة (لا إسناد للنفس، لا مراجعة ذاتية...) ثم تسمح عبر صلاحياته ونطاقه العام.
+     */
+    private function registerAuthorizationGate(): void
+    {
+        Gate::before(function ($user, string $ability): ?bool {
+            if (! $user instanceof User || ! RbacCatalog::isPermission($ability)) {
+                return null;
             }
 
-            $isGlobalScope = $activeScopeId === null
-                || (string) $activeScopeId === (string) config('solaris.global_scope_id');
+            if (! app(MfaGuard::class)->allows($user, $ability)) {
+                return false;
+            }
 
-            if ($isGlobalScope && $user->hasRole('super_admin')) {
-                activity('auth')
-                    ->causedBy($user)
-                    ->withProperties(['scope' => 'global'])
-                    ->log('Super-admin performed global authorization bypass');
+            $resolver = app(AccessResolver::class);
+            $access = $resolver->for($user);
+
+            if ($access->superAdmin && $access->activeScope->type === AccessScope::TYPE_GLOBAL) {
+                if ($resolver->firstTime("super_admin:{$user->getKey()}:{$ability}")) {
+                    activity('rbac')
+                        ->causedBy($user)
+                        ->tap(function ($activity) use ($ability, $access) {
+                            $activity->context_id = $access->activeContextId;
+                            $activity->sensitivity = RbacCatalog::sensitivity($ability) === 'restricted' ? 'restricted' : 'sensitive';
+                            $activity->ip_address = request()?->ip();
+                            $activity->user_agent = request()?->userAgent();
+                        })
+                        ->withProperties(['ability' => $ability, 'scope' => 'global'])
+                        ->event('super_admin_bypass')
+                        ->log('Super-admin performed global authorization bypass');
+                }
 
                 return true;
             }
 
-            return null;
+            return $access->has($ability) ? true : null;
         });
     }
 }

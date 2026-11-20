@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\VisibleWithinScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ use Spatie\Translatable\HasTranslations;
  */
 class Organization extends Model
 {
-    use HasTranslations, HasUuids, SoftDeletes;
+    use HasTranslations, HasUuids, SoftDeletes, VisibleWithinScope;
 
     public array $translatable = ['name', 'description'];
 
