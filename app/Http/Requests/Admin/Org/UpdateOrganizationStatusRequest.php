@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin\Org;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateOrganizationStatusRequest extends FormRequest
 {
@@ -12,7 +13,7 @@ class UpdateOrganizationStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +24,8 @@ class UpdateOrganizationStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'status' => ['required', Rule::in(['active', 'suspended', 'archived'])],
+            'reason' => ['required', 'string', 'min:5', 'max:1000'],
         ];
     }
 }

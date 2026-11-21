@@ -10,6 +10,45 @@
         }
     ],
     "paths": {
+        "/v1/admin/organizations/{organization}/verify": {
+            "post": {
+                "tags": [
+                    "Admin Organizations"
+                ],
+                "summary": "توثيق مؤسسة",
+                "operationId": "verifyOrganization",
+                "parameters": [
+                    {
+                        "name": "organization",
+                        "in": "path",
+                        "description": "معرّف المؤسسة وفق Route Model Binding المستخدم في المشروع.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم توثيق المؤسسة؛ يعاد OrganizationResource"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية توثيق المؤسسة"
+                    },
+                    "404": {
+                        "description": "المؤسسة غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "tags": [
@@ -403,6 +442,15 @@
                     },
                     "422": {
                         "description": "فشل التحقق من المدخلات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/me/permissions": {
             "get": {
                 "tags": [
@@ -551,19 +599,6 @@
                     },
                     "422": {
                         "description": "فشل التحقق من المدخلات"
-        "/v1/me/scopes": {
-            "get": {
-                "tags": [
-                    "Me"
-                ],
-                "summary": "النطاقات التي أملك فيها أدوارًا (للاختيار منها)",
-                "operationId": "bd76dbecf1aa3f1f5e0232702eecd496",
-                "responses": {
-                    "200": {
-                        "description": "قائمة النطاقات؛ النطاق العام دائمًا موجود، و active يحدد الفعّال حاليًا"
-                    },
-                    "401": {
-                        "description": "التوكن مفقود أو غير صالح"
                     }
                 },
                 "security": [
@@ -594,31 +629,6 @@
                                         "description": "صورة JPG أو PNG أو WEBP، بحد أقصى 2MB",
                                         "type": "string",
                                         "format": "binary"
-        "/v1/me/scope": {
-            "post": {
-                "tags": [
-                    "Me"
-                ],
-                "summary": "تفعيل نطاق للجلسة الحالية",
-                "operationId": "9232d36176fb8c735a7c7a82545cfa94",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "scope_id"
-                                ],
-                                "properties": {
-                                    "scope_id": {
-                                        "type": "integer",
-                                        "example": 4
-                                    },
-                                    "context": {
-                                        "description": "اختياري: تفعيل سياق من سياقاتي النشطة مع النطاق (دمج مع تبديل السياق — ورقة B4)",
-                                        "type": "string",
-                                        "example": "organization",
-                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -656,6 +666,71 @@
                     },
                     "401": {
                         "description": "غير مصرح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/scopes": {
+            "get": {
+                "tags": [
+                    "Me"
+                ],
+                "summary": "النطاقات التي أملك فيها أدوارًا (للاختيار منها)",
+                "operationId": "bd76dbecf1aa3f1f5e0232702eecd496",
+                "responses": {
+                    "200": {
+                        "description": "قائمة النطاقات؛ النطاق العام دائمًا موجود، و active يحدد الفعّال حاليًا"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/scope": {
+            "post": {
+                "tags": [
+                    "Me"
+                ],
+                "summary": "تفعيل نطاق للجلسة الحالية",
+                "operationId": "9232d36176fb8c735a7c7a82545cfa94",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "scope_id"
+                                ],
+                                "properties": {
+                                    "scope_id": {
+                                        "type": "integer",
+                                        "example": 4
+                                    },
+                                    "context": {
+                                        "description": "اختياري: تفعيل سياق من سياقاتي النشطة مع النطاق (دمج مع تبديل السياق — ورقة B4)",
+                                        "type": "string",
+                                        "example": "organization",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
                         "description": "تم التفعيل؛ الاستجابة = صلاحياتي في النطاق الجديد (مثل GET /me/permissions)"
                     },
                     "409": {
@@ -663,6 +738,496 @@
                     },
                     "422": {
                         "description": "نطاق أو سياق غير متاح لك"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/organizations": {
+            "get": {
+                "tags": [
+                    "Organizations"
+                ],
+                "summary": "عرض المؤسسات مع البحث والفلاتر",
+                "description": "يعيد قائمة مؤسسات مرقّمة. الفلاتر المتاحة: type وstatus وcountry وregion وq وper_page.",
+                "operationId": "listOrganizations",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "educational",
+                                "training_center",
+                                "ngo",
+                                "employer",
+                                "donor",
+                                "government",
+                                "partner",
+                                "other"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "active",
+                                "suspended",
+                                "archived"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "region",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "تعليم",
+                            "maxLength": 150
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة المؤسسات مع روابط وبيانات الترقيم",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "description": "عنصر من OrganizationResource",
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "description": "روابط الترقيم",
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "description": "بيانات الترقيم",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية عرض المؤسسات"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من الفلاتر"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Organizations"
+                ],
+                "summary": "إنشاء مؤسسة",
+                "description": "تنشأ المؤسسة بحالة pending. لا يعيّن هذا الإصدار admin_user؛ ربط RoleAssignmentService ينتظر دمج B4 ومعرفة توقيعه الفعلي.",
+                "operationId": "createOrganization",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "required": [
+                                            "ar"
+                                        ],
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "example": "مؤسسة النور",
+                                                "maxLength": 255
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "example": "Al Noor Foundation",
+                                                "nullable": true,
+                                                "maxLength": 255
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "educational",
+                                        "enum": [
+                                            "educational",
+                                            "training_center",
+                                            "ngo",
+                                            "employer",
+                                            "donor",
+                                            "government",
+                                            "partner",
+                                            "other"
+                                        ]
+                                    },
+                                    "country_id": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "type": "integer",
+                                        "example": 3,
+                                        "nullable": true
+                                    },
+                                    "registration_number": {
+                                        "type": "string",
+                                        "example": "REG-2026-01",
+                                        "nullable": true,
+                                        "maxLength": 100
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "info@example.org",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+963912345678",
+                                        "nullable": true,
+                                        "maxLength": 20
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://example.org",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    },
+                                    "logo_path": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "settings": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء المؤسسة؛ تكون الحالة pending"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية إنشاء مؤسسة"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات أو عدم تطابق الدولة والمنطقة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/organizations/{organization}": {
+            "get": {
+                "tags": [
+                    "Organizations"
+                ],
+                "summary": "عرض مؤسسة واحدة",
+                "operationId": "showOrganization",
+                "parameters": [
+                    {
+                        "name": "organization",
+                        "in": "path",
+                        "description": "معرّف المؤسسة وفق Route Model Binding المستخدم في المشروع.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "بيانات المؤسسة من OrganizationResource"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية عرض هذه المؤسسة"
+                    },
+                    "404": {
+                        "description": "المؤسسة غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Organizations"
+                ],
+                "summary": "تعديل بيانات مؤسسة",
+                "description": "جميع الحقول اختيارية للتعديل الجزئي. لا يقبل هذا المسار status أو slug أو verified_at أو verified_by.",
+                "operationId": "updateOrganization",
+                "parameters": [
+                    {
+                        "name": "organization",
+                        "in": "path",
+                        "description": "معرّف المؤسسة وفق Route Model Binding المستخدم في المشروع.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "maxLength": 255
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "nullable": true,
+                                                "maxLength": 255
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "educational",
+                                            "training_center",
+                                            "ngo",
+                                            "employer",
+                                            "donor",
+                                            "government",
+                                            "partner",
+                                            "other"
+                                        ]
+                                    },
+                                    "country_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "registration_number": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 100
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 20
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    },
+                                    "logo_path": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "settings": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث المؤسسة؛ يعاد OrganizationResource"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية تعديل هذه المؤسسة"
+                    },
+                    "404": {
+                        "description": "المؤسسة غير موجودة"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات أو عدم تطابق الدولة والمنطقة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/organizations": {
+            "get": {
+                "tags": [
+                    "Organizations"
+                ],
+                "summary": "عرض عضويات المؤسسات للمستخدم الحالي",
+                "description": "يعيد العضويات ذات الحالة active مرتبة تنازليًا حسب joined_at مع الترقيم.",
+                "operationId": "listMyOrganizations",
+                "responses": {
+                    "200": {
+                        "description": "قائمة عضويات المستخدم والمؤسسات المرتبطة بها",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "description": "عنصر من OrganizationMembershipResource",
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
                     }
                 },
                 "security": [
@@ -684,6 +1249,10 @@
     },
     "tags": [
         {
+            "name": "Admin Organizations",
+            "description": "Admin Organizations"
+        },
+        {
             "name": "Auth",
             "description": "Auth"
         },
@@ -696,10 +1265,16 @@
             "description": "Profile - Languages"
         },
         {
-            "name": "Profile",
-            "description": "Profile"
             "name": "Me",
             "description": "Me"
+        },
+        {
+            "name": "Profile",
+            "description": "Profile"
+        },
+        {
+            "name": "Organizations",
+            "description": "Organizations"
         }
     ]
 }
