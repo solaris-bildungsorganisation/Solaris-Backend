@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Notifications;
 
+use App\Models\Language;
 use App\Models\NotificationChannel;
 use App\Models\NotificationDelivery;
 use App\Models\NotificationPreference;
 use App\Models\NotificationTemplate;
 use App\Models\NotificationType;
-use App\Models\Language;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,9 +18,7 @@ use InvalidArgumentException;
 
 class NotificationService
 {
-    public function __construct(private readonly TemplateRenderer $renderer)
-    {
-    }
+    public function __construct(private readonly TemplateRenderer $renderer) {}
 
     public function send(User|iterable $users, string $typeKey, array $data = [], array $options = []): string
     {
@@ -30,7 +28,7 @@ class NotificationService
         $notifiables = $users instanceof User ? [$users] : $users;
 
         foreach ($notifiables as $notifiable) {
-            if (!$notifiable instanceof User) {
+            if (! $notifiable instanceof User) {
                 throw new InvalidArgumentException('Notification recipients must be User instances.');
             }
 
@@ -48,7 +46,7 @@ class NotificationService
     private function getValidType(string $typeKey): NotificationType
     {
         $type = NotificationType::where('key', $typeKey)->where('is_active', true)->first();
-        if (!$type) {
+        if (! $type) {
             throw new InvalidArgumentException("Notification type [{$typeKey}] not found or inactive.");
         }
 
@@ -86,16 +84,18 @@ class NotificationService
 
         foreach ($targetChannels as $channel) {
             $channelKey = (string) $channel->key;
-            if (!empty($options['secret']) && !in_array($channelKey, ['email', 'sms'], true)) {
+            if (! empty($options['secret']) && ! in_array($channelKey, ['email', 'sms'], true)) {
                 continue;
             }
-            if (!$this->passesPreferences($notifiable, $notificationType, $channel)) {
+            if (! $this->passesPreferences($notifiable, $notificationType, $channel)) {
                 $channelStatuses[$channelKey] = 'skipped_preference';
+
                 continue;
             }
 
-            if (!$this->passesSensitivity($notificationType, $channel)) {
+            if (! $this->passesSensitivity($notificationType, $channel)) {
                 $channelStatuses[$channelKey] = 'skipped_sensitivity';
+
                 continue;
             }
 
@@ -105,8 +105,9 @@ class NotificationService
                 $notifiable
             );
 
-            if (!$template) {
+            if (! $template) {
                 $channelStatuses[$channelKey] = 'skipped_missing_template';
+
                 continue;
             }
 
@@ -136,8 +137,8 @@ class NotificationService
         $acceptedDrivers = array_values(array_unique($acceptedDrivers));
         $dispatchOptions = $options;
         if (
-            !\in_array('mail', $acceptedDrivers, true)
-            && !\in_array('sms', $acceptedDrivers, true)
+            ! \in_array('mail', $acceptedDrivers, true)
+            && ! \in_array('sms', $acceptedDrivers, true)
         ) {
             unset($dispatchOptions['secret']);
         }
@@ -157,14 +158,15 @@ class NotificationService
             }
         });
 
-        if (!empty($acceptedDrivers)) {
+        if (! empty($acceptedDrivers)) {
             $notification = new PlatformNotification(
                 notificationUuid: $notificationUuid,
                 typeKey: $notificationType->key,
                 channels: $acceptedDrivers,
                 renderedTemplates: $renderedTemplates,
                 data: $safeData,
-                options: $dispatchOptions
+                options: $dispatchOptions,
+                recipientUuid: (string) $notifiable->uuid,
             );
 
             $notifiable->notify($notification);
@@ -188,7 +190,7 @@ class NotificationService
             ->where('channel_id', (int) $channel->id)
             ->first();
 
-        return !$preference || (bool) $preference->is_enabled;
+        return ! $preference || (bool) $preference->is_enabled;
     }
 
     private function passesSensitivity(
@@ -254,6 +256,7 @@ class NotificationService
         foreach ($value as $key => $item) {
             if (\is_string($key) && \in_array(strtolower($key), $secretKeys, true)) {
                 unset($value[$key]);
+
                 continue;
             }
 
