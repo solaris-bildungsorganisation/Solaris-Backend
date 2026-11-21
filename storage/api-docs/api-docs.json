@@ -10,257 +10,18 @@
         }
     ],
     "paths": {
-        "/v1/admin/users": {
-            "get": {
-                "tags": [
-                    "Admin - Users"
-                ],
-                "summary": "عرض قائمة المستخدمين مع إمكانية التصفية والترقيم",
-                "operationId": "7af0ac677b43588f94e057499222fe73",
-                "parameters": [
-                    {
-                        "name": "name",
-                        "in": "query",
-                        "description": "تصفية حسب الاسم",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "email",
-                        "in": "query",
-                        "description": "تصفية حسب البريد الإلكتروني",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "phone",
-                        "in": "query",
-                        "description": "تصفية حسب رقم الهاتف",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "description": "تصفية حسب حالة الحساب",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "country_id",
-                        "in": "query",
-                        "description": "تصفية حسب معرف الدولة",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "region_id",
-                        "in": "query",
-                        "description": "تصفية حسب معرف المنطقة",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "role",
-                        "in": "query",
-                        "description": "تصفية حسب الدور",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "context",
-                        "in": "query",
-                        "description": "تصفية حسب السياق",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "organization",
-                        "in": "query",
-                        "description": "تصفية حسب المنظمة",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "عدد العناصر في كل صفحة",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 15
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "تم جلب قائمة المستخدمين بنجاح"
-                    },
-                    "401": {
-                        "description": "غير مصرح بالدخول"
-                    },
-                    "403": {
-                        "description": "ليس لديك صلاحية لعرض المستخدمين"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
+        "/v1/admin/organizations/{organization}/verify": {
             "post": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Organizations"
                 ],
-                "summary": "إنشاء مستخدم جديد",
-                "operationId": "6ed70b9b54cff920607a019cac1e9f73",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "first_name",
-                                    "last_name"
-                                ],
-                                "properties": {
-                                    "first_name": {
-                                        "description": "الاسم الأول",
-                                        "type": "string",
-                                        "example": "أحمد",
-                                        "maxLength": 255
-                                    },
-                                    "last_name": {
-                                        "description": "الاسم الأخير",
-                                        "type": "string",
-                                        "example": "محمد",
-                                        "maxLength": 255
-                                    },
-                                    "display_name": {
-                                        "description": "الاسم الظاهر",
-                                        "type": "string",
-                                        "example": "أحمد محمد",
-                                        "nullable": true,
-                                        "maxLength": 255
-                                    },
-                                    "email": {
-                                        "description": "البريد الإلكتروني (مطلوب في حال عدم إدخال رقم الهاتف)",
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "ahmed@example.com",
-                                        "nullable": true
-                                    },
-                                    "phone": {
-                                        "description": "رقم الهاتف (مطلوب في حال عدم إدخال البريد الإلكتروني)",
-                                        "type": "string",
-                                        "example": "+963912345678",
-                                        "nullable": true,
-                                        "maxLength": 30
-                                    },
-                                    "country_id": {
-                                        "description": "معرف الدولة",
-                                        "type": "integer",
-                                        "example": 1,
-                                        "nullable": true
-                                    },
-                                    "region_id": {
-                                        "description": "معرف المنطقة",
-                                        "type": "integer",
-                                        "example": 5,
-                                        "nullable": true
-                                    },
-                                    "interface_language_id": {
-                                        "description": "معرف لغة الواجهة",
-                                        "type": "integer",
-                                        "example": 1,
-                                        "nullable": true
-                                    },
-                                    "timezone": {
-                                        "description": "المنطقة الزمنية",
-                                        "type": "string",
-                                        "example": "Asia/Damascus",
-                                        "nullable": true
-                                    },
-                                    "organization_id": {
-                                        "description": "معرف المنظمة (UUID)",
-                                        "type": "string",
-                                        "format": "uuid",
-                                        "example": "550e8400-e29b-41d4-a716-446655440000",
-                                        "nullable": true
-                                    },
-                                    "membership_type": {
-                                        "description": "نوع العضوية (ممنوع إرساله بدون organization_id)",
-                                        "type": "string",
-                                        "example": "member",
-                                        "nullable": true,
-                                        "enum": [
-                                            "member",
-                                            "staff",
-                                            "learner",
-                                            "instructor",
-                                            "employer_representative",
-                                            "partner_contact",
-                                            "volunteer"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "تم إنشاء المستخدم بنجاح"
-                    },
-                    "401": {
-                        "description": "غير مصرح بالدخول"
-                    },
-                    "403": {
-                        "description": "ليس لديك صلاحية لإنشاء مستخدم"
-                    },
-                    "422": {
-                        "description": "فشل التحقق من المدخلات"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/v1/admin/users/{user}": {
-            "get": {
-                "tags": [
-                    "Admin - Users"
-                ],
-                "summary": "عرض تفاصيل مستخدم محدد",
-                "operationId": "a26cbc5356a3d0107ca664239c1c0229",
+                "summary": "توثيق مؤسسة",
+                "operationId": "verifyOrganization",
                 "parameters": [
                     {
-                        "name": "user",
+                        "name": "organization",
                         "in": "path",
-                        "description": "معرف المستخدم (ID أو UUID حسب التوجيه)",
+                        "description": "معرّف المؤسسة وفق Route Model Binding المستخدم في المشروع.",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -269,130 +30,21 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "تم جلب بيانات المستخدم بنجاح"
+                        "description": "تم توثيق المؤسسة؛ يعاد OrganizationResource"
                     },
                     "401": {
-                        "description": "غير مصرح بالدخول"
+                        "description": "التوكن مفقود أو غير صالح"
                     },
                     "403": {
-                        "description": "ليس لديك صلاحية لعرض هذا المستخدم"
+                        "description": "لا يملك المستخدم صلاحية توثيق المؤسسة"
                     },
                     "404": {
-                        "description": "المستخدم غير موجود"
+                        "description": "المؤسسة غير موجودة"
                     }
                 },
                 "security": [
                     {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "put": {
-                "tags": [
-                    "Admin - Users"
-                ],
-                "summary": "تحديث بيانات مستخدم موجود",
-                "operationId": "ab95016ec625b81d2c082b6e21e3c776",
-                "parameters": [
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "description": "معرف المستخدم (ID أو UUID حسب التوجيه)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "first_name": {
-                                        "description": "الاسم الأول",
-                                        "type": "string",
-                                        "example": "أحمد",
-                                        "maxLength": 255
-                                    },
-                                    "last_name": {
-                                        "description": "الاسم الأخير",
-                                        "type": "string",
-                                        "example": "محمد",
-                                        "maxLength": 255
-                                    },
-                                    "display_name": {
-                                        "description": "الاسم الظاهر",
-                                        "type": "string",
-                                        "example": "أحمد محمد",
-                                        "nullable": true,
-                                        "maxLength": 255
-                                    },
-                                    "email": {
-                                        "description": "البريد الإلكتروني",
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "ahmed@example.com",
-                                        "nullable": true
-                                    },
-                                    "phone": {
-                                        "description": "رقم الهاتف",
-                                        "type": "string",
-                                        "example": "+963912345678",
-                                        "nullable": true,
-                                        "maxLength": 30
-                                    },
-                                    "country_id": {
-                                        "description": "معرف الدولة",
-                                        "type": "integer",
-                                        "example": 1,
-                                        "nullable": true
-                                    },
-                                    "region_id": {
-                                        "description": "معرف المنطقة",
-                                        "type": "integer",
-                                        "example": 5,
-                                        "nullable": true
-                                    },
-                                    "interface_language_id": {
-                                        "description": "معرف لغة الواجهة",
-                                        "type": "integer",
-                                        "example": 1,
-                                        "nullable": true
-                                    },
-                                    "timezone": {
-                                        "description": "المنطقة الزمنية",
-                                        "type": "string",
-                                        "example": "Asia/Damascus",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "تم تحديث بيانات المستخدم بنجاح"
-                    },
-                    "401": {
-                        "description": "غير مصرح بالدخول"
-                    },
-                    "403": {
-                        "description": "ليس لديك صلاحية لتعديل هذا المستخدم"
-                    },
-                    "404": {
-                        "description": "المستخدم غير موجود"
-                    },
-                    "422": {
-                        "description": "فشل التحقق من المدخلات"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -432,42 +84,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "نجاح. شكلان للاستجابة: (1) بدون 2FA: access_token مباشرة. (2) مع 2FA مفعّل (K2): two_factor_required + challenge_token (صالح 5 دقائق) بدل التوكن — أكمِل عبر POST /v1/auth/2fa/challenge.",
-                        "content": {
-                            "application/json": {
-                                "schema": {},
-                                "examples": {
-                                    "token": {
-                                        "summary": "بدون 2FA",
-                                        "value": {
-                                            "message": ".تم تسجيل الدخول بنجاح",
-                                            "token_type": "Bearer",
-                                            "access_token": "1|abc...",
-                                            "data": {
-                                                "uuid": "9b1c...",
-                                                "first_name": "Ahmad",
-                                                "last_name": "Ali",
-                                                "display_name": "Ahmad Ali",
-                                                "email": "user@example.com",
-                                                "phone": null
-                                            }
-                                        }
-                                    },
-                                    "two_factor": {
-                                        "summary": "2FA مفعّل",
-                                        "value": {
-                                            "message": "أدخل رمز التحقق الثنائي لإكمال تسجيل الدخول.",
-                                            "two_factor_required": true,
-                                            "challenge_token": "kQ3x...(64 حرفًا)",
-                                            "expires_in": 300
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "423": {
-                        "description": "الحساب مقفل مؤقتًا (5 محاولات فاشلة: كلمة مرور أو رمز 2FA)"
+                        "description": "نجاح؛ تشمل الاستجابة access_token"
                     },
                     "401": {
                         "description": "بيانات الدخول غير صحيحة"
@@ -577,106 +194,6 @@
                     },
                     "422": {
                         "description": "فشل التحقق من المدخلات أو البريد/الهاتف مستخدم مسبقًا"
-                    }
-                }
-            }
-        },
-        "/v1/auth/2fa/challenge": {
-            "post": {
-                "tags": [
-                    "Two-Factor Auth"
-                ],
-                "summary": "إكمال الدخول: challenge_token + رمز التطبيق أو رمز استرداد → التوكن والجلسة",
-                "description": "challenge_token يأتي من POST /v1/auth/login عندما تكون الاستجابة two_factor_required = true. صالح 5 دقائق، يُستخدم مرة واحدة، ويبطل بعد 5 رموز خاطئة. الرموز الخاطئة تُحسب ضمن قفل الحساب (5 محاولات → 15 دقيقة). الجلسة الجديدة تُعدّ متحقَّقًا منها (step-up) لمدة 15 دقيقة. محدود بـ 5 طلبات في الدقيقة.",
-                "operationId": "e462f9b60594b5699165ad16582cf2b9",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "challenge_token"
-                                ],
-                                "properties": {
-                                    "challenge_token": {
-                                        "type": "string",
-                                        "example": "kQ3x..."
-                                    },
-                                    "code": {
-                                        "description": "رمز التطبيق (6 أرقام) — مطلوب إن لم يُرسل recovery_code",
-                                        "type": "string",
-                                        "example": "123456"
-                                    },
-                                    "recovery_code": {
-                                        "description": "رمز استرداد (يُستهلك) — بديل عن code",
-                                        "type": "string",
-                                        "example": "a1b2c-3d4e5"
-                                    },
-                                    "device_name": {
-                                        "type": "string",
-                                        "example": "Chrome on Windows",
-                                        "nullable": true
-                                    },
-                                    "platform": {
-                                        "type": "string",
-                                        "example": "web",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "تم تسجيل الدخول — نفس شكل استجابة /auth/login بدون 2FA",
-                        "content": {
-                            "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "message": ".تم تسجيل الدخول بنجاح",
-                                    "token_type": "Bearer",
-                                    "access_token": "12|xyz...",
-                                    "data": {
-                                        "uuid": "9b1c...",
-                                        "first_name": "Ahmad",
-                                        "last_name": "Ali",
-                                        "display_name": "Ahmad Ali",
-                                        "email": "user@example.com",
-                                        "phone": null
-                                    },
-                                    "two_factor": {
-                                        "method": "totp",
-                                        "recovery_codes_remaining": 8
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "code = invalid_code (رمز خاطئ، يمكن المحاولة مجددًا) أو challenge_invalid (تحدٍّ منتهٍ/مستخدم/أُبطل — سجّل الدخول من جديد)",
-                        "content": {
-                            "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "message": "رمز التحقق غير صحيح أو مستخدم مسبقًا.",
-                                    "code": "invalid_code"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "code = account_unavailable — الحساب غير نشط"
-                    },
-                    "422": {
-                        "description": "فشل التحقق من المدخلات"
-                    },
-                    "423": {
-                        "description": "code = account_locked — الحساب مقفل مؤقتًا"
-                    },
-                    "429": {
-                        "description": "محاولات كثيرة"
                     }
                 }
             }
@@ -940,7 +457,7 @@
                     "Me"
                 ],
                 "summary": "صلاحياتي الفعلية في السياق والنطاق الفعّالين",
-                "description": "الصلاحيات الفعلية = أدوار النطاق العام ∪ أدوار النطاق الفعّال، مفلترة بالسياق الفعّال (الصلاحيات الذاتية تسري دائمًا). mfa_required: الصلاحيات التي تتطلب MFA (في وضع warn تُسمح مع تسجيل تحذير — القرار D8). mfa.confirmed = للجلسة تحقق 2FA حديث (step-up خلال 15 دقيقة عبر POST /v1/me/2fa/verify)؛ mfa.enforced = الرفض مفعّل لهذا المستخدم.",
+                "description": "الصلاحيات الفعلية = أدوار النطاق العام ∪ أدوار النطاق الفعّال، مفلترة بالسياق الفعّال (الصلاحيات الذاتية تسري دائمًا). mfa_required: الصلاحيات التي تتطلب MFA (في وضع warn تُسمح مع تسجيل تحذير — القرار D8).",
                 "operationId": "a703339c39ffa2c242f5ae1f8f580df5",
                 "responses": {
                     "200": {
@@ -992,8 +509,6 @@
                                         ],
                                         "mfa": {
                                             "mode": "warn",
-                                            "enforced": false,
-                                            "two_factor_enabled": true,
                                             "confirmed": false
                                         }
                                     }
@@ -1232,26 +747,111 @@
                 ]
             }
         },
-        "/v1/me/2fa": {
+        "/v1/organizations": {
             "get": {
                 "tags": [
-                    "Two-Factor Auth"
+                    "Organizations"
                 ],
-                "summary": "حالة التحقق الثنائي لحسابي",
-                "operationId": "d20293d5f73a9fed2337fc6924d34a84",
+                "summary": "عرض المؤسسات مع البحث والفلاتر",
+                "description": "يعيد قائمة مؤسسات مرقّمة. الفلاتر المتاحة: type وstatus وcountry وregion وq وper_page.",
+                "operationId": "listOrganizations",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "educational",
+                                "training_center",
+                                "ngo",
+                                "employer",
+                                "donor",
+                                "government",
+                                "partner",
+                                "other"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "active",
+                                "suspended",
+                                "archived"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "region",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "تعليم",
+                            "maxLength": 150
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "نجاح",
+                        "description": "قائمة المؤسسات مع روابط وبيانات الترقيم",
                         "content": {
                             "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "data": {
-                                        "enabled": true,
-                                        "pending": false,
-                                        "confirmed_at": "2026-11-20T10:00:00+00:00",
-                                        "recovery_codes_remaining": 8
-                                    }
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "description": "عنصر من OrganizationResource",
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "description": "روابط الترقيم",
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "description": "بيانات الترقيم",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -1260,7 +860,10 @@
                         "description": "التوكن مفقود أو غير صالح"
                     },
                     "403": {
-                        "description": "لا صلاحية"
+                        "description": "لا يملك المستخدم صلاحية عرض المؤسسات"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من الفلاتر"
                     }
                 },
                 "security": [
@@ -1269,202 +872,120 @@
                     }
                 ]
             },
-            "delete": {
+            "post": {
                 "tags": [
-                    "Two-Factor Auth"
+                    "Organizations"
                 ],
-                "summary": "تعطيل التحقق الثنائي ومسح الـ secret ورموز الاسترداد",
-                "description": "ينهي باقي جلسات المستخدم عدا الحالية ويرسل إشعارًا أمنيًا.",
-                "operationId": "feda650575d365bb597cdfbfc0c12e64",
+                "summary": "إنشاء مؤسسة",
+                "description": "تنشأ المؤسسة بحالة pending. لا يعيّن هذا الإصدار admin_user؛ ربط RoleAssignmentService ينتظر دمج B4 ومعرفة توقيعه الفعلي.",
+                "operationId": "createOrganization",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "current_password",
-                                    "code"
+                                    "name",
+                                    "type"
                                 ],
                                 "properties": {
-                                    "current_password": {
-                                        "type": "string",
-                                        "format": "password"
+                                    "name": {
+                                        "required": [
+                                            "ar"
+                                        ],
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "example": "مؤسسة النور",
+                                                "maxLength": 255
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "example": "Al Noor Foundation",
+                                                "nullable": true,
+                                                "maxLength": 255
+                                            }
+                                        },
+                                        "type": "object"
                                     },
-                                    "code": {
-                                        "description": "رمز التطبيق أو رمز استرداد",
+                                    "type": {
                                         "type": "string",
-                                        "example": "123456"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "204": {
-                        "description": "تم التعطيل"
-                    },
-                    "409": {
-                        "description": "التحقق الثنائي غير مفعّل"
-                    },
-                    "422": {
-                        "description": "كلمة المرور أو الرمز غير صحيح"
-                    },
-                    "429": {
-                        "description": "محاولات كثيرة"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/v1/me/2fa/enable": {
-            "post": {
-                "tags": [
-                    "Two-Factor Auth"
-                ],
-                "summary": "بدء التفعيل: يولّد secret ويعيد رمز QR (SVG) ورابط otpauth — لا يُفعَّل قبل التأكيد",
-                "operationId": "432ac85c76602c0ba4ad993fd600ce95",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "current_password"
-                                ],
-                                "properties": {
-                                    "current_password": {
-                                        "type": "string",
-                                        "format": "password"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "الإعداد معلّق حتى التأكيد. الـ secret يظهر هنا فقط (للإدخال اليدوي) ولا يظهر بعد التأكيد.",
-                        "content": {
-                            "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "data": {
-                                        "secret": "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
-                                        "otpauth_url": "otpauth://totp/Solaris:user%40example.com?secret=...&issuer=Solaris&algorithm=SHA1&digits=6&period=30",
-                                        "qr_svg": "<svg ...>...</svg>"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "409": {
-                        "description": "التحقق الثنائي مفعّل بالفعل"
-                    },
-                    "422": {
-                        "description": "كلمة المرور الحالية غير صحيحة"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/v1/me/2fa/confirm": {
-            "post": {
-                "tags": [
-                    "Two-Factor Auth"
-                ],
-                "summary": "تأكيد التفعيل برمز من التطبيق → 8 رموز استرداد تُعرض مرة واحدة",
-                "description": "ينهي باقي جلسات المستخدم عدا الحالية ويرسل إشعارًا أمنيًا. محدود بـ 5 محاولات في الدقيقة.",
-                "operationId": "bc87b9a28ed28fde45903949a0e033b8",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "code"
-                                ],
-                                "properties": {
-                                    "code": {
-                                        "type": "string",
-                                        "example": "123456"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "تم التفعيل. احفظ رموز الاسترداد — لن تظهر مرة أخرى.",
-                        "content": {
-                            "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "data": {
-                                        "enabled": true,
-                                        "recovery_codes": [
-                                            "a1b2c-3d4e5",
-                                            "f6a7b-8c9d0"
+                                        "example": "educational",
+                                        "enum": [
+                                            "educational",
+                                            "training_center",
+                                            "ngo",
+                                            "employer",
+                                            "donor",
+                                            "government",
+                                            "partner",
+                                            "other"
                                         ]
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "409": {
-                        "description": "لا يوجد إعداد معلّق، أو التحقق مفعّل بالفعل"
-                    },
-                    "422": {
-                        "description": "رمز غير صحيح أو مستخدم مسبقًا"
-                    },
-                    "429": {
-                        "description": "محاولات كثيرة"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/v1/me/2fa/recovery-codes": {
-            "post": {
-                "tags": [
-                    "Two-Factor Auth"
-                ],
-                "summary": "إعادة توليد رموز الاسترداد — القديمة تبطل فورًا",
-                "operationId": "4644e06506b00cd18d737ab19960b35d",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "current_password",
-                                    "code"
-                                ],
-                                "properties": {
-                                    "current_password": {
-                                        "type": "string",
-                                        "format": "password"
                                     },
-                                    "code": {
-                                        "description": "رمز التطبيق أو رمز استرداد",
+                                    "country_id": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "type": "integer",
+                                        "example": 3,
+                                        "nullable": true
+                                    },
+                                    "registration_number": {
                                         "type": "string",
-                                        "example": "123456"
+                                        "example": "REG-2026-01",
+                                        "nullable": true,
+                                        "maxLength": 100
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "info@example.org",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+963912345678",
+                                        "nullable": true,
+                                        "maxLength": 20
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://example.org",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    },
+                                    "logo_path": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "settings": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "additionalProperties": true
                                     }
                                 },
                                 "type": "object"
@@ -1473,30 +994,17 @@
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "رموز جديدة تُعرض مرة واحدة",
-                        "content": {
-                            "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "data": {
-                                        "recovery_codes": [
-                                            "a1b2c-3d4e5",
-                                            "f6a7b-8c9d0"
-                                        ]
-                                    }
-                                }
-                            }
-                        }
+                    "201": {
+                        "description": "تم إنشاء المؤسسة؛ تكون الحالة pending"
                     },
-                    "409": {
-                        "description": "التحقق الثنائي غير مفعّل"
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية إنشاء مؤسسة"
                     },
                     "422": {
-                        "description": "كلمة المرور أو الرمز غير صحيح"
-                    },
-                    "429": {
-                        "description": "محاولات كثيرة"
+                        "description": "فشل التحقق من المدخلات أو عدم تطابق الدولة والمنطقة"
                     }
                 },
                 "security": [
@@ -1506,27 +1014,153 @@
                 ]
             }
         },
-        "/v1/me/2fa/verify": {
-            "post": {
+        "/v1/organizations/{organization}": {
+            "get": {
                 "tags": [
-                    "Two-Factor Auth"
+                    "Organizations"
                 ],
-                "summary": "تحقق إضافي (step-up): رمز حديث يفتح العمليات الحساسة (MFA) لهذه الجلسة 15 دقيقة",
-                "description": "استدعه عندما يعيد أي مسار 403 بالرمز mfa_required. رمز الاسترداد مقبول ويُستهلك. إن أعاد المسار mfa_setup_required فعلى المستخدم تفعيل 2FA أولًا. محدود بـ 5 محاولات في الدقيقة.",
-                "operationId": "ae29786fc81282adef1a995dcd546dd5",
+                "summary": "عرض مؤسسة واحدة",
+                "operationId": "showOrganization",
+                "parameters": [
+                    {
+                        "name": "organization",
+                        "in": "path",
+                        "description": "معرّف المؤسسة وفق Route Model Binding المستخدم في المشروع.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "بيانات المؤسسة من OrganizationResource"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية عرض هذه المؤسسة"
+                    },
+                    "404": {
+                        "description": "المؤسسة غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Organizations"
+                ],
+                "summary": "تعديل بيانات مؤسسة",
+                "description": "جميع الحقول اختيارية للتعديل الجزئي. لا يقبل هذا المسار status أو slug أو verified_at أو verified_by.",
+                "operationId": "updateOrganization",
+                "parameters": [
+                    {
+                        "name": "organization",
+                        "in": "path",
+                        "description": "معرّف المؤسسة وفق Route Model Binding المستخدم في المشروع.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "code"
-                                ],
                                 "properties": {
-                                    "code": {
-                                        "description": "رمز التطبيق أو رمز استرداد",
+                                    "name": {
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "maxLength": 255
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "nullable": true,
+                                                "maxLength": 255
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": {
                                         "type": "string",
-                                        "example": "123456"
+                                        "enum": [
+                                            "educational",
+                                            "training_center",
+                                            "ngo",
+                                            "employer",
+                                            "donor",
+                                            "government",
+                                            "partner",
+                                            "other"
+                                        ]
+                                    },
+                                    "country_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "registration_number": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 100
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 20
+                                    },
+                                    "website": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    },
+                                    "logo_path": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "properties": {
+                                            "ar": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "en": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "settings": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "additionalProperties": true
                                     }
                                 },
                                 "type": "object"
@@ -1536,34 +1170,64 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "تم التحقق",
+                        "description": "تم تحديث المؤسسة؛ يعاد OrganizationResource"
+                    },
+                    "401": {
+                        "description": "التوكن مفقود أو غير صالح"
+                    },
+                    "403": {
+                        "description": "لا يملك المستخدم صلاحية تعديل هذه المؤسسة"
+                    },
+                    "404": {
+                        "description": "المؤسسة غير موجودة"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات أو عدم تطابق الدولة والمنطقة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/organizations": {
+            "get": {
+                "tags": [
+                    "Organizations"
+                ],
+                "summary": "عرض عضويات المؤسسات للمستخدم الحالي",
+                "description": "يعيد العضويات ذات الحالة active مرتبة تنازليًا حسب joined_at مع الترقيم.",
+                "operationId": "listMyOrganizations",
+                "responses": {
+                    "200": {
+                        "description": "قائمة عضويات المستخدم والمؤسسات المرتبطة بها",
                         "content": {
                             "application/json": {
-                                "schema": {},
-                                "example": {
-                                    "data": {
-                                        "verified": true,
-                                        "verified_until": "2026-11-20T10:15:00+00:00",
-                                        "expires_in": 900
-                                    }
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "description": "عنصر من OrganizationMembershipResource",
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "401": {
                         "description": "التوكن مفقود أو غير صالح"
-                    },
-                    "403": {
-                        "description": "لا صلاحية"
-                    },
-                    "409": {
-                        "description": "التحقق الثنائي غير مفعّل"
-                    },
-                    "422": {
-                        "description": "رمز غير صحيح أو مستخدم مسبقًا"
-                    },
-                    "429": {
-                        "description": "محاولات كثيرة"
                     }
                 },
                 "security": [
@@ -1585,16 +1249,12 @@
     },
     "tags": [
         {
-            "name": "Admin - Users",
-            "description": "Admin - Users"
+            "name": "Admin Organizations",
+            "description": "Admin Organizations"
         },
         {
             "name": "Auth",
             "description": "Auth"
-        },
-        {
-            "name": "Two-Factor Auth",
-            "description": "Two-Factor Auth"
         },
         {
             "name": "Profile - Account Type Requests",
@@ -1611,6 +1271,10 @@
         {
             "name": "Profile",
             "description": "Profile"
+        },
+        {
+            "name": "Organizations",
+            "description": "Organizations"
         }
     ]
 }

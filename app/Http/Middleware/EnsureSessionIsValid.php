@@ -33,12 +33,6 @@ class EnsureSessionIsValid
             $session->forceFill(['last_activity_at' => now()])->save();
         }
 
-
-app(\Spatie\Permission\PermissionRegistrar::class)
-    ->setPermissionsTeamId($session->active_scope_id);
-
-
-
         return $next($request);
     }
 }

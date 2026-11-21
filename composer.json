@@ -10,7 +10,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "bacon/bacon-qr-code": "^3.1",
         "darkaonline/l5-swagger": "^11.3",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.0",

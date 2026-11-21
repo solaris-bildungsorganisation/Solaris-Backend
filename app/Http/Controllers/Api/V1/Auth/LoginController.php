@@ -1,12 +1,8 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1\Auth;
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
-use App\Services\Auth\TwoFactorChallengeService;
-use App\Services\Auth\TwoFactorService;
 use App\Services\SessionService;
 use Illuminate\Support\Facades\Hash;
 use OpenApi\Attributes as OA;
@@ -44,23 +40,7 @@ class LoginController extends Controller
             ]
         ),
         responses: [
-            new OA\Response(
-                response: 200,
-                description: 'نجاح. شكلان للاستجابة: (1) بدون 2FA: access_token مباشرة. (2) مع 2FA مفعّل (K2): two_factor_required + challenge_token (صالح 5 دقائق) بدل التوكن — أكمِل عبر POST /v1/auth/2fa/challenge.',
-                content: new OA\JsonContent(examples: [
-                    new OA\Examples(example: 'token', summary: 'بدون 2FA', value: [
-                        'message' => '.تم تسجيل الدخول بنجاح', 'token_type' => 'Bearer', 'access_token' => '1|abc...',
-                        'data' => ['uuid' => '9b1c...', 'first_name' => 'Ahmad', 'last_name' => 'Ali', 'display_name' => 'Ahmad Ali', 'email' => 'user@example.com', 'phone' => null],
-                    ]),
-                    new OA\Examples(example: 'two_factor', summary: '2FA مفعّل', value: [
-                        'message' => 'أدخل رمز التحقق الثنائي لإكمال تسجيل الدخول.',
-                        'two_factor_required' => true,
-                        'challenge_token' => 'kQ3x...(64 حرفًا)',
-                        'expires_in' => 300,
-                    ]),
-                ]),
-            ),
-            new OA\Response(response: 423, description: 'الحساب مقفل مؤقتًا (5 محاولات فاشلة: كلمة مرور أو رمز 2FA)'),
+            new OA\Response(response: 200, description: 'نجاح؛ تشمل الاستجابة access_token'),
             new OA\Response(response: 401, description: 'بيانات الدخول غير صحيحة'),
             new OA\Response(response: 403, description: 'الحساب غير نشط'),
             new OA\Response(response: 422, description: 'فشل التحقق من المدخلات'),
@@ -99,20 +79,8 @@ class LoginController extends Controller
             $user->save();
 
             return response()->json([
-                'message' => 'بيانات الدخول غير صحيحة.',
+                'message' => 'بيانات الدخول غير صحيحة.'
             ], 401);
-        }
-        // K2: 2FA مفعّل → لا توكن بكلمة المرور وحدها؛ challenge_token يُكمَل عبر POST /auth/2fa/challenge.
-        // عدّاد المحاولات الفاشلة لا يُصفَّر هنا: الرموز الخاطئة في التحدّي تُحسب ضمن قفل الحساب.
-        if (app(TwoFactorService::class)->isEnabled($user)) {
-            $challenges = app(TwoFactorChallengeService::class);
-
-            return response()->json([
-                'message' => 'أدخل رمز التحقق الثنائي لإكمال تسجيل الدخول.',
-                'two_factor_required' => true,
-                'challenge_token' => $challenges->issue($user, $request),
-                'expires_in' => $challenges->ttlMinutes() * 60,
-            ]);
         }
         $user->failed_login_count = 0;
         $user->locked_until = null;
