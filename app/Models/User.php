@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\VisibleWithinScope;
+use App\Services\Rbac\AccessResolver;
+use App\Services\Rbac\EffectiveAccess;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +22,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable, SoftDeletes, VisibleWithinScope;
 
     /**
      * الحقول التي يحق للمستخدم/النموذج تعبئتها جماعيًا.
@@ -114,6 +117,45 @@ class User extends Authenticatable
     public function sessions(): HasMany
     {
         return $this->hasMany(UserSession::class);
+    }
+
+    public function currentSession(): ?UserSession
+    {
+        $tokenId = $this->currentAccessToken()?->id;
+
+        if ($tokenId === null) {
+            return null;
+        }
+
+        return $this->sessions()
+            ->whereNull('revoked_at')
+            ->where(fn($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->where('personal_access_token_id', $tokenId)
+            ->first();
+    }
+
+    // ───────────── Authorization (B4) ─────────────
+
+    /**
+     * spatie مع teams يرى النطاق الحالي فقط. قاعدة المنصة: أدوار النطاق العام ∪ أدوار النطاق الفعّال،
+     * مفلترة بالسياق الفعّال — محسوبة مركزيًا في AccessResolver. هكذا تعطي can() و hasPermissionTo()
+     * و Gate نفس الجواب في كل مكان.
+     */
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        $name = match (true) {
+            $permission instanceof \Spatie\Permission\Contracts\Permission => $permission->name,
+            $permission instanceof \BackedEnum => (string) $permission->value,
+            is_int($permission) => Permission::query()->whereKey($permission)->value('name'),
+            default => (string) $permission,
+        };
+
+        return $name !== null && app(AccessResolver::class)->for($this)->has($name);
+    }
+
+    public function effectiveAccess(): EffectiveAccess
+    {
+        return app(AccessResolver::class)->for($this);
     }
 
     public function verificationCodes(): HasMany

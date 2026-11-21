@@ -1,0 +1,2168 @@
+{
+  "info": {
+    "_postman_id": "d40f8c1a-38f3-4831-9909-942f00295f8f",
+    "name": "Solaris API — K1/K2 التحقق الثنائي (2FA)",
+    "description": "# Solaris API — K1/K2 التحقق الثنائي (2FA TOTP)\n\nمجموعة لاختبار مسارات التحقق الثنائي كاملة كسيناريو يُشغَّل بالترتيب عبر **Collection Runner** (أو طلبًا طلبًا).\n\n**رموز TOTP تُحسب تلقائيًا داخل Postman** من الـ secret الذي يعيده `/me/2fa/enable` — لا حاجة لهاتف. للتجربة اليدوية بتطبيق حقيقي امسح `qr_svg` بـ Google Authenticator واكتب الرمز مكان `{{totp_code}}`.\n\n## قبل البدء\n1. شغّل MySQL ثم `php artisan serve`.\n2. الحسابات التجريبية: `php artisan db:seed --class=\"Database\\Seeders\\DemoSeeder\"` (كلمة المرور `Solaris@Demo2026`).\n3. استورد البيئة `Solaris-Local.postman_environment.json` واخترها (base_url + password).\n\n**إعادة الضبط** إن توقف تشغيل سابق في المنتصف (2FA بقي مفعّلًا):\n```\nphp artisan tinker --execute=\"App\\Models\\User::whereIn('email',['learner@demo.test','admin@demo.test'])->update(['two_factor_secret'=>null,'two_factor_recovery_codes'=>null,'two_factor_confirmed_at'=>null]);\"\n```\n\n## المسارات\n| Method | المسار | الحماية |\n|---|---|---|\n| GET | /me/2fa | auth |\n| POST | /me/2fa/enable | auth + current_password + throttle |\n| POST | /me/2fa/confirm | auth + throttle |\n| POST | /me/2fa/recovery-codes | auth + current_password + code + throttle |\n| DELETE | /me/2fa | auth + current_password + code + throttle |\n| POST | /me/2fa/verify | auth + throttle (step-up 15 دقيقة) |\n| POST | /auth/login | عام — **تغيّر شكل الاستجابة عند 2FA** |\n| POST | /auth/2fa/challenge | عام + throttle |\n\n## ما يحتاجه الـ Frontend\n- **الدخول**: إن احتوت الاستجابة `two_factor_required: true` فلا يوجد `access_token` — اعرض شاشة الرمز وأرسل `challenge_token` + `code` (أو `recovery_code`) إلى `/auth/2fa/challenge`. صلاحية التحدّي 5 دقائق (`expires_in`).\n- **أخطاء التحدّي**: `401 invalid_code` (أعد المحاولة) · `401 challenge_invalid` (ارجع لشاشة الدخول) · `423 account_locked` · `403 account_unavailable`.\n- **العمليات الحساسة**: `403` مع `code = mfa_required` → اطلب رمزًا، `POST /me/2fa/verify`، ثم أعد الطلب. `code = mfa_setup_required` → وجّه المستخدم لصفحة تفعيل 2FA.\n- **رموز الاسترداد** تظهر مرة واحدة فقط (بعد confirm أو إعادة التوليد).\n- **throttle**: 5 طلبات/دقيقة (الدخول والتحدّي معًا لكل IP؛ مسارات /me/2fa الحساسة لكل مستخدم). المجموعة تنتظر تلقائيًا لتجنّب 429.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// ── 1) TOTP داخل Postman (لا حاجة لهاتف): {{totp_code}} من totp_secret و {{admin_totp_code}} من admin_totp_secret.",
+          "// ── 2) السيرفر يرفض نفس الرمز مرتين، فننتظر تلقائيًا بداية الـ 30 ثانية التالية عند الحاجة.",
+          "// ── 3) throttle:5,1 — ننتظر تلقائيًا قبل الطلب السادس خلال دقيقة حتى يعمل Collection Runner دون 429.",
+          "function base32ToHex(b32) {",
+          "    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';",
+          "    let bits = '';",
+          "    for (const ch of b32.replace(/=+$/, '').toUpperCase()) {",
+          "        const v = alphabet.indexOf(ch);",
+          "        if (v < 0) continue;",
+          "        bits += v.toString(2).padStart(5, '0');",
+          "    }",
+          "    let hex = '';",
+          "    for (let i = 0; i + 8 <= bits.length; i += 8) hex += parseInt(bits.substr(i, 8), 2).toString(16).padStart(2, '0');",
+          "    return hex;",
+          "}",
+          "function totp(secret, step) {",
+          "    const msg = step.toString(16).padStart(16, '0');",
+          "    const h = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(msg), CryptoJS.enc.Hex.parse(base32ToHex(secret))).toString();",
+          "    const offset = parseInt(h.substr(h.length - 1), 16);",
+          "    return ((parseInt(h.substr(offset * 2, 8), 16) & 0x7fffffff) % 1000000).toString().padStart(6, '0');",
+          "}",
+          "",
+          "const raw = (pm.request.body && pm.request.body.raw) || '';",
+          "const url = pm.request.url.getPath();",
+          "const method = pm.request.method;",
+          "const tokenParam = pm.request.auth && pm.request.auth.bearer ? pm.request.auth.bearer.get('token') : null;",
+          "",
+          "let bucket = null;",
+          "if (/\\/auth\\/(login|2fa\\/challenge)$/.test(url)) bucket = 'ip';",
+          "else if (/\\/me\\/2fa\\/(enable|confirm|recovery-codes|verify)$/.test(url) || (method === 'DELETE' && /\\/me\\/2fa$/.test(url))) bucket = 'user_' + (tokenParam || 'none');",
+          "",
+          "let wait = 0;",
+          "let times = [];",
+          "if (bucket) {",
+          "    times = JSON.parse(pm.collectionVariables.get('thr_' + bucket) || '[]').filter(t => Date.now() - t < 61000);",
+          "    if (times.length >= 5) wait = Math.max(wait, times[times.length - 5] + 61000 - Date.now());",
+          "}",
+          "",
+          "const codes = [",
+          "    { placeholder: '{{totp_code}}', secretVar: 'totp_secret', codeVar: 'totp_code', lastVar: 'last_totp_code' },",
+          "    { placeholder: '{{admin_totp_code}}', secretVar: 'admin_totp_secret', codeVar: 'admin_totp_code', lastVar: 'last_admin_totp_code' },",
+          "].filter(c => raw.includes(c.placeholder) && pm.collectionVariables.get(c.secretVar));",
+          "",
+          "for (const c of codes) {",
+          "    const lastStep = parseInt(pm.collectionVariables.get('step_' + c.codeVar) || '-1', 10);",
+          "    const stepAtSend = Math.floor((Date.now() + wait) / 30000);",
+          "    if (stepAtSend <= lastStep) wait = Math.max(wait, (lastStep + 1) * 30000 + 1500 - Date.now());",
+          "}",
+          "",
+          "if (wait > 0) console.log('⏳ waiting ' + Math.ceil(wait / 1000) + 's (TOTP step / throttle)');",
+          "",
+          "setTimeout(() => {",
+          "    for (const c of codes) {",
+          "        const step = Math.floor(Date.now() / 30000);",
+          "        const value = totp(pm.collectionVariables.get(c.secretVar), step);",
+          "        pm.collectionVariables.set(c.codeVar, value);",
+          "        pm.collectionVariables.set(c.lastVar, value);",
+          "        pm.collectionVariables.set('step_' + c.codeVar, String(step));",
+          "    }",
+          "    if (bucket) {",
+          "        times.push(Date.now());",
+          "        pm.collectionVariables.set('thr_' + bucket, JSON.stringify(times));",
+          "    }",
+          "}, Math.max(0, wait));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token_learner",
+      "value": ""
+    },
+    {
+      "key": "token_admin",
+      "value": ""
+    },
+    {
+      "key": "uuid_learner",
+      "value": ""
+    },
+    {
+      "key": "challenge_token",
+      "value": ""
+    },
+    {
+      "key": "totp_secret",
+      "value": ""
+    },
+    {
+      "key": "admin_totp_secret",
+      "value": ""
+    },
+    {
+      "key": "totp_code",
+      "value": ""
+    },
+    {
+      "key": "admin_totp_code",
+      "value": ""
+    },
+    {
+      "key": "last_totp_code",
+      "value": ""
+    },
+    {
+      "key": "last_admin_totp_code",
+      "value": ""
+    },
+    {
+      "key": "recovery_code_1",
+      "value": ""
+    },
+    {
+      "key": "recovery_code_2",
+      "value": ""
+    },
+    {
+      "key": "old_recovery_code",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Setup — دخول الحسابات التجريبية",
+      "description": "يسجّل دخول learner@demo.test و admin@demo.test (بدون 2FA بعد) ويحفظ التوكنات و uuid.\n\nإن كان أحدهما مفعّلًا لـ 2FA من تشغيل سابق، ستكون الاستجابة challenge — نفّذ أمر إعادة الضبط في وصف المجموعة.",
+      "item": [
+        {
+          "name": "Login learner (بدون 2FA → توكن مباشرة)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "**POST /auth/login** — مستخدم بدون 2FA: نفس الاستجابة القديمة تمامًا (access_token).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"learner@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"access_token موجود (لا 2FA)\", () => pm.expect(j.access_token).to.be.a(\"string\"));",
+                  "pm.test(\"لا two_factor_required\", () => pm.expect(j.two_factor_required).to.be.undefined);",
+                  "pm.collectionVariables.set(\"token_learner\", j.access_token);",
+                  "pm.collectionVariables.set(\"uuid_learner\", j.data.uuid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "دخول platform_admin (نطاق عام).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set(\"token_admin\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 · K1 — تفعيل 2FA وإدارته (learner)",
+      "description": "دورة كاملة: الحالة → enable (QR) → confirm (رموز استرداد) → إعادة توليد الرموز → step-up → رفض إعادة الاستخدام.",
+      "item": [
+        {
+          "name": "GET /me/2fa — الحالة (غير مفعّل)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa"
+              ]
+            },
+            "description": "**GET /me/2fa** — `enabled`, `pending`, `confirmed_at`, `recovery_codes_remaining`. الصلاحية: profile.view_own.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"enabled = false\", () => pm.expect(pm.response.json().data.enabled).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /me/2fa — بدون توكن (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa"
+              ]
+            },
+            "description": "بدون توكن → **401**.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/enable — كلمة مرور خاطئة (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/enable",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "enable"
+              ]
+            },
+            "description": "كلمة المرور الحالية إلزامية → **422** على current_password.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"wrong-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"خطأ current_password\", () => pm.expect(pm.response.json().errors).to.have.property(\"current_password\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/enable — يولّد secret + QR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/enable",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "enable"
+              ]
+            },
+            "description": "**POST /me/2fa/enable** — يعيد `secret` (للإدخال اليدوي) و `otpauth_url` و `qr_svg` (SVG جاهز للعرض في الواجهة).\n\n**لا يُفعَّل بعد** — يجب التأكيد برمز من التطبيق. الـ secret لا يظهر في أي استجابة بعد التأكيد.\n\nFrontend: اعرض `qr_svg` مباشرة (innerHTML) أو ارسم QR من `otpauth_url`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"qr_svg يبدأ بـ <svg\", () => pm.expect(d.qr_svg.startsWith(\"<svg\")).to.be.true);",
+                  "pm.test(\"otpauth_url\", () => pm.expect(d.otpauth_url.startsWith(\"otpauth://totp/\")).to.be.true);",
+                  "pm.collectionVariables.set(\"totp_secret\", d.secret);",
+                  "pm.collectionVariables.unset(\"step_totp_code\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/confirm — رمز خاطئ (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "confirm"
+              ]
+            },
+            "description": "رمز خاطئ → **422** على `code`، ويُسجَّل `mfa_failed` في auth_events.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/confirm — رمز صحيح → 8 رموز استرداد",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "confirm"
+              ]
+            },
+            "description": "**POST /me/2fa/confirm** — `code` من التطبيق (هنا يُحسب تلقائيًا في Postman).\n\nيعيد 8 رموز استرداد **تُعرض مرة واحدة فقط** — على الواجهة إلزام المستخدم بحفظها. ينهي باقي جلسات المستخدم عدا الحالية (security) ويرسل إشعارًا أمنيًا.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"8 رموز استرداد\", () => pm.expect(d.recovery_codes).to.have.lengthOf(8));",
+                  "pm.collectionVariables.set(\"recovery_code_1\", d.recovery_codes[0]);",
+                  "pm.collectionVariables.set(\"recovery_code_2\", d.recovery_codes[1]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /me/2fa — مفعّل، 8 رموز، بلا secret",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa"
+              ]
+            },
+            "description": "بعد التأكيد: enabled = true ولا يظهر secret أو رموز.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"enabled\", () => pm.expect(d.enabled).to.eql(true));",
+                  "pm.test(\"8 متبقية\", () => pm.expect(d.recovery_codes_remaining).to.eql(8));",
+                  "pm.test(\"لا secret\", () => pm.expect(pm.response.text()).to.not.include(pm.collectionVariables.get(\"totp_secret\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/enable — مفعّل بالفعل (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/enable",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "enable"
+              ]
+            },
+            "description": "لإعادة الإعداد يجب التعطيل أولًا → **409**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/recovery-codes — إعادة توليد",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/recovery-codes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "recovery-codes"
+              ]
+            },
+            "description": "**POST /me/2fa/recovery-codes** — كلمة المرور + رمز (تطبيق أو استرداد). الرموز القديمة تبطل فورًا.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\",\n  \"code\": \"{{totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"8 رموز جديدة\", () => pm.expect(d.recovery_codes).to.have.lengthOf(8));",
+                  "pm.collectionVariables.set(\"old_recovery_code\", pm.collectionVariables.get(\"recovery_code_1\"));",
+                  "pm.collectionVariables.set(\"recovery_code_1\", d.recovery_codes[0]);",
+                  "pm.collectionVariables.set(\"recovery_code_2\", d.recovery_codes[1]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/verify — رمز استرداد قديم مرفوض (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "verify"
+              ]
+            },
+            "description": "رمز من الدفعة القديمة بعد إعادة التوليد → **422**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{old_recovery_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/verify — step-up برمز التطبيق",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "verify"
+              ]
+            },
+            "description": "**POST /me/2fa/verify** (K2) — رمز حديث يفتح العمليات الحساسة (MFA) لهذه الجلسة **15 دقيقة**.\n\nFrontend: عند أي **403** بـ `code = mfa_required` اعرض نافذة الرمز، استدعِ هذا المسار، ثم أعد الطلب الأصلي.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"verified\", () => pm.expect(d.verified).to.eql(true));",
+                  "pm.test(\"expires_in = 900\", () => pm.expect(d.expires_in).to.eql(900));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/verify — نفس الرمز مرتين مرفوض (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "verify"
+              ]
+            },
+            "description": "إعادة استخدام نفس رمز TOTP (نفس الـ 30 ثانية) → **422**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{last_totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/verify — رمز استرداد (يعمل مرة)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "verify"
+              ]
+            },
+            "description": "رمز الاسترداد مقبول ويُستهلك.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{recovery_code_1}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/2fa/verify — نفس رمز الاسترداد مرة ثانية (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "verify"
+              ]
+            },
+            "description": "رمز الاسترداد يُستخدم مرة واحدة → **422**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{recovery_code_1}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · K2 — تحدّي 2FA عند الدخول (learner)",
+      "description": "مستخدم 2FA لا يأخذ توكنًا من /auth/login — يأخذ challenge_token (5 دقائق، استخدام واحد، يبطل بعد 5 رموز خاطئة).",
+      "item": [
+        {
+          "name": "POST /auth/login — 2FA مفعّل → challenge_token بدل التوكن",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "**تغيّر شكل الاستجابة (K2)** — عندما يكون 2FA مفعّلًا:\n\n```json\n{ \"message\": \"...\", \"two_factor_required\": true, \"challenge_token\": \"...\", \"expires_in\": 300 }\n```\n\nFrontend: إن وُجد `two_factor_required` اعرض شاشة إدخال الرمز (أو رمز استرداد) واستدعِ /auth/2fa/challenge.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"learner@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"two_factor_required\", () => pm.expect(j.two_factor_required).to.eql(true));",
+                  "pm.test(\"لا access_token\", () => pm.expect(j.access_token).to.be.undefined);",
+                  "pm.test(\"expires_in = 300\", () => pm.expect(j.expires_in).to.eql(300));",
+                  "pm.collectionVariables.set(\"challenge_token\", j.challenge_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/2fa/challenge — بدون رمز (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/2fa/challenge",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "challenge"
+              ]
+            },
+            "description": "`code` أو `recovery_code` إلزامي → **422**.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_token\": \"{{challenge_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/2fa/challenge — رمز خاطئ (401 invalid_code)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/2fa/challenge",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "challenge"
+              ]
+            },
+            "description": "رمز خاطئ → **401** `code = invalid_code` (يمكن المحاولة مجددًا). يُحسب ضمن قفل الحساب (5 → قفل 15 دقيقة).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_token\": \"{{challenge_token}}\",\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = invalid_code\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_code\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/2fa/challenge — رمز صحيح → توكن + جلسة",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/2fa/challenge",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "challenge"
+              ]
+            },
+            "description": "**POST /auth/2fa/challenge** — نفس شكل استجابة الدخول العادي + `two_factor.method`.\nالجلسة الجديدة تُعدّ متحقَّقًا منها (step-up) 15 دقيقة.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_token\": \"{{challenge_token}}\",\n  \"code\": \"{{totp_code}}\",\n  \"device_name\": \"Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"access_token\", () => pm.expect(j.access_token).to.be.a(\"string\"));",
+                  "pm.test(\"method = totp\", () => pm.expect(j.two_factor.method).to.eql(\"totp\"));",
+                  "pm.collectionVariables.set(\"token_learner\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/2fa/challenge — نفس challenge_token مرة ثانية (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/2fa/challenge",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "challenge"
+              ]
+            },
+            "description": "challenge_token يُستخدم مرة واحدة → **401** `challenge_invalid` (على الواجهة الرجوع لشاشة الدخول).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_token\": \"{{challenge_token}}\",\n  \"code\": \"{{totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = challenge_invalid\", () => pm.expect(pm.response.json().code).to.eql(\"challenge_invalid\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/2fa/challenge — token غير معروف (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/2fa/challenge",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "challenge"
+              ]
+            },
+            "description": "challenge_token غير موجود/منتهٍ → **401** `challenge_invalid`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_token\": \"not-a-real-token\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = challenge_invalid\", () => pm.expect(pm.response.json().code).to.eql(\"challenge_invalid\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login — تحدٍّ جديد",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "تحدٍّ جديد لتجربة رمز الاسترداد.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"learner@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"challenge_token\", pm.response.json().challenge_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/2fa/challenge — برمز استرداد",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/2fa/challenge",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "challenge"
+              ]
+            },
+            "description": "`recovery_code` بدل `code` (عند فقدان الهاتف). يُستهلك ويُسجَّل `mfa_recovery_code_used`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challenge_token\": \"{{challenge_token}}\",\n  \"recovery_code\": \"{{recovery_code_2}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"method = recovery\", () => pm.expect(j.two_factor.method).to.eql(\"recovery\"));",
+                  "pm.collectionVariables.set(\"token_learner\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /me/2fa — بدون كلمة مرور (422)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa"
+              ]
+            },
+            "description": "التعطيل يتطلب كلمة المرور الحالية + رمز → **422**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /me/2fa — تعطيل",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa"
+              ]
+            },
+            "description": "**DELETE /me/2fa** — كلمة المرور + رمز (تطبيق أو استرداد). يمسح الحقول الثلاثة، ينهي باقي الجلسات، ويرسل إشعارًا أمنيًا → **204**.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_learner}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\",\n  \"code\": \"{{totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login — بعد التعطيل يعود التوكن مباشرة",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "بعد التعطيل: الدخول العادي كما كان.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"learner@demo.test\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"access_token\", () => pm.expect(j.access_token).to.be.a(\"string\"));",
+                  "pm.collectionVariables.set(\"token_learner\", j.access_token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 · K2 — step-up و mfa.confirmed (admin)",
+      "description": "إنهاء جلسات مستخدم (DELETE /admin/users/{uuid}/sessions) محمي بـ mfa.confirmed.\n\n- `SOLARIS_MFA_ENFORCE=false` (الافتراضي الآن): يُسمح ويُسجَّل تحذير → **204**.\n- `SOLARIS_MFA_ENFORCE=true`: **403** بالرمز `mfa_setup_required` (لا 2FA) أو `mfa_required` (لا تحقق حديث)، وبعد POST /me/2fa/verify → **204**.\n\nلتجربة الرفض: ضع `SOLARIS_MFA_ENFORCE=true` في .env ثم `php artisan config:clear` وأعد تشغيل السيرفر.",
+      "item": [
+        {
+          "name": "GET /me/permissions — حالة MFA",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "`data.mfa` = `{mode, enforced, two_factor_enabled, confirmed}` — `confirmed` = للجلسة تحقق حديث.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"mfa block\", () => pm.expect(pm.response.json().data.mfa).to.have.property(\"confirmed\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE sessions — بلا 2FA (enforce → 403 mfa_setup_required)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_learner}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_learner}}",
+                "sessions"
+              ]
+            },
+            "description": "مسؤول بلا 2FA مفعّل.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"postman security test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = pm.response.code;",
+                  "pm.test(\"204 (enforce=false: تحذير فقط) أو 403 (enforce=true)\", () => pm.expect([204, 403]).to.include(s));",
+                  "if (pm.response.code === 403) pm.test(\"mfa_setup_required\", () => pm.expect(pm.response.json().code).to.eql(\"mfa_setup_required\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: POST /me/2fa/enable",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/enable",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "enable"
+              ]
+            },
+            "description": "تفعيل 2FA للمسؤول.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"admin_totp_secret\", pm.response.json().data.secret);",
+                  "pm.collectionVariables.unset(\"step_admin_totp_code\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: POST /me/2fa/confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "confirm"
+              ]
+            },
+            "description": "تأكيد.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{admin_totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE sessions — 2FA مفعّل بلا step-up (enforce → 403 mfa_required)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_learner}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_learner}}",
+                "sessions"
+              ]
+            },
+            "description": "التفعيل وحده لا يكفي — يلزم رمز حديث لهذه الجلسة.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"postman security test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = pm.response.code;",
+                  "pm.test(\"204 (enforce=false: تحذير فقط) أو 403 (enforce=true)\", () => pm.expect([204, 403]).to.include(s));",
+                  "if (pm.response.code === 403) pm.test(\"mfa_required\", () => pm.expect(pm.response.json().code).to.eql(\"mfa_required\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: POST /me/2fa/verify — step-up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa",
+                "verify"
+              ]
+            },
+            "description": "رمز حديث → 15 دقيقة.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{admin_totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /me/permissions — confirmed = true",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/permissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "permissions"
+              ]
+            },
+            "description": "بعد step-up.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"confirmed\", () => pm.expect(pm.response.json().data.mfa.confirmed).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE sessions — بعد step-up → 204",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{uuid_learner}}/sessions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{uuid_learner}}",
+                "sessions"
+              ]
+            },
+            "description": "بعد التحقق الإضافي ينجح في كل الأوضاع.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"postman security test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin: DELETE /me/2fa — تعطيل (تنظيف)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "2fa"
+              ]
+            },
+            "description": "إعادة الحساب لحالته حتى يمكن تشغيل المجموعة مجددًا.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\",\n  \"code\": \"{{admin_totp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -117,9 +117,13 @@ return [
     /*
      * When set to true, the method for checking permissions will be registered on the gate.
      * Set this to false if you want to implement custom logic for checking permissions.
+     *
+     * زولاريس: false عمدًا. فحص spatie الافتراضي يرى النطاق الحالي (team) فقط، أما قاعدة المنصة فهي
+     * "أدوار النطاق العام ∪ أدوار النطاق الفعّال" مع فلترة السياق الفعّال. البديل مسجّل في
+     * AppServiceProvider (Gate::before) ويستخدم App\Services\Rbac\AccessResolver.
      */
 
-    'register_permission_check_method' => true,
+    'register_permission_check_method' => false,
 
     /*
      * When set to true, Laravel\Octane\Events\OperationTerminated event listener will be registered

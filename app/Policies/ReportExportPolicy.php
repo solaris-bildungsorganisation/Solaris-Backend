@@ -6,61 +6,51 @@ use App\Models\ReportExport;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * تصدير التقارير — FR-ADMIN-010, 012.
+ *  - reports.export (sensitive + MFA) لتقارير النطاق، و users.export (G فقط + MFA) لبيانات المستخدمين.
+ *  - التصدير لا يتجاوز نطاق المُصدِّر (ScopeGuard يفحص organization_id / filters).
+ */
 class ReportExportPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function viewAny(User $user): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, 'reports.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, ReportExport $reportExport): bool
+    public function view(User $user, ReportExport $export): Response
     {
-        return false;
+        if ($export->user_id === $user->getKey()) {
+            return Response::allow();
+        }
+
+        return ScopeGuard::authorize($user, 'reports.view', $export);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    /** $reportKey = 'users' يتطلب users.export، غيره reports.export. */
+    public function create(User $user, ?string $reportKey = null): Response
     {
-        return false;
+        return ScopeGuard::authorize($user, $reportKey === 'users' ? 'users.export' : 'reports.export');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, ReportExport $reportExport): bool
+    public function update(User $user, ReportExport $export): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, ReportExport $reportExport): bool
+    /** حذف/إلغاء التصدير من صاحبه فقط */
+    public function delete(User $user, ReportExport $export): Response
     {
-        return false;
+        return $export->user_id === $user->getKey() ? Response::allow() : Response::deny();
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, ReportExport $reportExport): bool
+    public function restore(User $user, ReportExport $export): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, ReportExport $reportExport): bool
+    public function forceDelete(User $user, ReportExport $export): Response
     {
-        return false;
+        return Response::deny();
     }
 }

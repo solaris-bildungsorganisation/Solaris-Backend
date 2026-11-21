@@ -87,7 +87,7 @@ return new class extends Migration
             $table->comment('FR-ORG-002 — دعوات الانضمام للمؤسسة');
         });
 
-        DB::statement("ALTER TABLE organization_invitations ADD CONSTRAINT org_inv_contact_required CHECK (email IS NOT NULL OR phone IS NOT NULL)");
+        DB::statement('ALTER TABLE organization_invitations ADD CONSTRAINT org_inv_contact_required CHECK (email IS NOT NULL OR phone IS NOT NULL)');
     }
 
     public function down(): void

@@ -2,65 +2,17 @@
 
 namespace App\Policies;
 
-use App\Models\UiTranslation;
-use App\Models\User;
-use Illuminate\Auth\Access\Response;
-
-class UiTranslationPolicy
+/** FR-I18N-008 ترجمات الواجهة — translations.manage (إعداد عام، نطاق G فقط). */
+class UiTranslationPolicy extends GlobalSettingPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    protected function permission(): string
     {
-        return false;
+        return 'translations.manage';
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, UiTranslation $uiTranslation): bool
+    /** بيانات مرجعية تعرضها الواجهة لكل مستخدم. */
+    protected function publicRead(): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, UiTranslation $uiTranslation): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, UiTranslation $uiTranslation): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, UiTranslation $uiTranslation): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, UiTranslation $uiTranslation): bool
-    {
-        return false;
+        return true;
     }
 }

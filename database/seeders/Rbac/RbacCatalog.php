@@ -7,8 +7,9 @@ namespace Database\Seeders\Rbac;
  *
  * - الأدوار الـ 14 والسياقات مأخوذة من §3 "نموذج الأدوار والصلاحيات" في وثيقة التسليم والتنفيذ.
  * - الصلاحيات تغطي موارد الموجة 1 (AUTH · I18N · ORG · ADMIN · COM) بصيغة resource.action.
- * - ربط الأدوار بالصلاحيات هنا "مسودة 1" — يُعدَّل فقط عبر مهمة Authorization Matrix المعتمدة،
- *   ثم يُعاد تشغيل RoleSeeder (idempotent: يزامن ولا يكرر).
+ * - ربط الأدوار بالصلاحيات هنا = مصفوفة التفويض "مسودة 2" (requerments/Solaris_Authorization_Matrix_Wave1.xlsx)
+ *   ونسختها المصدّرة tests/fixtures/authorization_matrix.csv التي يتحقق منها AuthorizationMatrixTest خلية خلية.
+ *   أي تعديل هنا يجب أن يطابق المصفوفة المعتمدة، ثم يُعاد تشغيل RoleSeeder (idempotent: يزامن ولا يكرر).
  *
  * إضافة صلاحية: أضفها في permissions() ثم اربطها بالأدوار في roles() — لا تُنشأ صلاحيات من الكود أو من لوحة التحكم.
  */
@@ -110,7 +111,7 @@ final class RbacCatalog
             ],
             'reports' => [
                 'view' => ['internal', false, 'عرض التقارير'],
-                'export' => ['sensitive', false, 'تصدير التقارير'],
+                'export' => ['sensitive', true, 'تصدير التقارير'], // الفروقات #9: MFA (D4/D8)
                 'donor_view' => ['internal', false, 'تقارير المانحين والشركاء'],
             ],
             'audit_log' => [
@@ -122,6 +123,10 @@ final class RbacCatalog
                 'manage' => ['personal', false, 'إدارة قصص النجاح'],
                 'publish' => ['internal', false, 'نشر قصص النجاح'],
             ],
+            // الفروقات #1: طلب تغيير المنطقة من الحساب (FR-AUTH-032, 036)
+            'region_changes' => [
+                'create_own' => ['personal', false, 'طلب تغيير منطقتي'],
+            ],
             'notifications' => [
                 'view_own' => ['personal', false, 'عرض إشعاراتي'],
                 'preferences_own' => ['personal', false, 'تفضيلات إشعاراتي'],
@@ -132,16 +137,81 @@ final class RbacCatalog
         ];
     }
 
-    /** صلاحيات ذاتية يملكها كل مستخدم نشط عبر أي دور. */
-    private static function selfService(): array
+    /**
+     * صلاحيات ذاتية يملكها كل مستخدم نشط عبر أي دور.
+     * تسري دائمًا مهما كان السياق الفعّال (FR-AUTH-016/017).
+     */
+    public static function selfService(): array
     {
         return [
             'profile.view_own', 'profile.update_own',
             'sessions.view_own', 'sessions.revoke_own',
             'account_type_requests.create_own',
+            'region_changes.create_own',
             'notifications.view_own', 'notifications.preferences_own',
             'success_stories.view',
         ];
+    }
+
+    /**
+     * صلاحيات الإعداد العام = خلية "G" في المصفوفة لكل دور يملكها.
+     * لا تُحسب إلا إذا كان الدور مُسنَدًا في النطاق العام (scope_id = 1) — الفروقات #7 و#8 (D7).
+     */
+    public static function globalOnly(): array
+    {
+        return [
+            'users.export',
+            'countries.manage', 'regions.manage', 'region_policies.manage',
+            'languages.manage', 'translations.manage',
+            'notification_types.manage', 'notification_templates.manage',
+        ];
+    }
+
+    /**
+     * ورقة "إسناد الأدوار": أي دور يحق لكل مُسنِد أن يُسنده.
+     * ['*', 'except' => [...]] = كل الأدوار عدا المذكورة. الأدوار غير المذكورة هنا لا تُسنِد شيئًا.
+     * super_admin لا يُسنَد عبر الـ API إطلاقًا (D3 — SuperAdminSeeder فقط).
+     */
+    public static function assignableRoles(): array
+    {
+        return [
+            self::SUPER_ADMIN => ['*', 'except' => [self::SUPER_ADMIN]],
+            'platform_admin' => ['*', 'except' => ['platform_admin', self::SUPER_ADMIN]],
+            // D2: خمسة أدوار تعليمية داخل مؤسسته فقط
+            'organization_admin' => ['academic_student', 'vocational_trainee', 'instructor', 'content_creator', 'mentor'],
+        ];
+    }
+
+    /** [sensitivity, requires_mfa] لصلاحية، أو null إن لم تكن في الكتالوج. */
+    public static function permissionMeta(string $name): ?array
+    {
+        static $index = null;
+
+        if ($index === null) {
+            $index = [];
+            foreach (self::permissions() as $resource => $actions) {
+                foreach ($actions as $action => [$sensitivity, $mfa]) {
+                    $index["{$resource}.{$action}"] = [$sensitivity, $mfa];
+                }
+            }
+        }
+
+        return $index[$name] ?? null;
+    }
+
+    public static function isPermission(string $name): bool
+    {
+        return self::permissionMeta($name) !== null;
+    }
+
+    public static function requiresMfa(string $name): bool
+    {
+        return (bool) (self::permissionMeta($name)[1] ?? false);
+    }
+
+    public static function sensitivity(string $name): string
+    {
+        return self::permissionMeta($name)[0] ?? 'internal';
     }
 
     /**
@@ -161,7 +231,7 @@ final class RbacCatalog
             ],
             'academic_student' => [
                 'name' => ['طالب أكاديمي', 'Academic student'], 'context' => 'learning',
-                'administrative' => false, 'self_registrable' => false, 'requires_approval' => false,
+                'administrative' => false, 'self_registrable' => true, 'requires_approval' => true,
                 'scopes' => ['global', 'organization'], 'rank' => 10, 'permissions' => $self,
             ],
             'vocational_trainee' => [
@@ -202,6 +272,7 @@ final class RbacCatalog
                     'dashboard.view', 'metrics.view', 'reports.view', 'reports.export', 'reports.donor_view',
                     'success_stories.manage', 'users.view_any', 'users.view',
                     'organizations.view_any', 'organizations.view', 'organization_reports.view',
+                    'region_policies.view', // الفروقات #6
                 ],
             ],
             'recruiter' => [
@@ -224,6 +295,10 @@ final class RbacCatalog
                     'organization_members.update', 'organization_members.remove',
                     'organization_reports.view', 'roles.view', 'users.view',
                     'dashboard.view', 'reports.view', 'reports.export',
+                    'users.view_any',                                                   // الفروقات #2
+                    'roles.assign', 'roles.revoke',                                     // الفروقات #3 (D2)
+                    'account_type_requests.view_any', 'account_type_requests.review',   // الفروقات #4 (D1)
+                    'reports.donor_view',                                               // الفروقات #5 (D5)
                 ],
             ],
             'platform_admin' => [

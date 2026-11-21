@@ -6,61 +6,41 @@ use App\Models\User;
 use App\Models\UserSession;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * الجلسات — FR-AUTH-024, 025.
+ *  - جلساتي: sessions.view_own / sessions.revoke_own (جلسة مستخدم آخر = 404).
+ *  - جلسات المستخدمين: sessions.view_any / sessions.revoke_any (MFA) — فلتر النطاق: مستخدمو النطاق (ScopeGuard).
+ */
 class UserSessionPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('sessions.view_own');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, UserSession $userSession): bool
+    public function revoke(User $user, UserSession $session): Response
     {
-        return false;
+        if ($session->user_id != $user->id) {
+            return Response::denyAsNotFound();
+        }
+
+        return $user->can('sessions.revoke_own')
+            ? Response::allow()
+            : Response::deny();
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function revokeOthers(User $user): bool
     {
-        return false;
+        return $user->can('sessions.revoke_own');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, UserSession $userSession): bool
+    public function viewForUser(User $admin, User $target): Response
     {
-        return false;
+        return ScopeGuard::authorize($admin, 'sessions.view_any', $target);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, UserSession $userSession): bool
+    public function revokeForUser(User $admin, User $target): Response
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, UserSession $userSession): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, UserSession $userSession): bool
-    {
-        return false;
+        return ScopeGuard::authorize($admin, 'sessions.revoke_any', $target, 'sessions.view_any');
     }
 }

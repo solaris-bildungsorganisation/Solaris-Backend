@@ -2,65 +2,17 @@
 
 namespace App\Policies;
 
-use App\Models\Region;
-use App\Models\User;
-use Illuminate\Auth\Access\Response;
-
-class RegionPolicy
+/** FR-AUTH-031 المناطق — regions.manage (إعداد عام، نطاق G فقط). */
+class RegionPolicy extends GlobalSettingPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    protected function permission(): string
     {
-        return false;
+        return 'regions.manage';
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Region $region): bool
+    /** بيانات مرجعية تعرضها الواجهة لكل مستخدم. */
+    protected function publicRead(): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Region $region): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Region $region): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Region $region): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Region $region): bool
-    {
-        return false;
+        return true;
     }
 }
