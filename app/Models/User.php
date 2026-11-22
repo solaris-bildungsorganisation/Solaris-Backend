@@ -41,6 +41,7 @@ class User extends Authenticatable
         'country_id',
         'region_id',
         'timezone',
+        'must_change_password',
     ];
 
     protected $hidden = [
