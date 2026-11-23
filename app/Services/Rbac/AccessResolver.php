@@ -51,6 +51,7 @@ class AccessResolver
             ->join($t['roles'].' as r', 'r.id', '=', 'mhr.role_id')
             ->where('mhr.model_type', $user->getMorphClass())
             ->where("mhr.{$morphKey}", $user->getKey())
+
             ->where(fn ($q) => $q->whereNull('mhr.expires_at')->orWhere('mhr.expires_at', '>', now()))
             ->max('r.rank');
     }

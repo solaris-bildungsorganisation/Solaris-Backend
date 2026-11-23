@@ -12,6 +12,7 @@ use Carbon\CarbonInterface;
 use Database\Seeders\Rbac\RbacCatalog;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\PermissionRegistrar;
+use App\Events\UserRolesChanged;
 
 /**
  * RoleAssignmentService — يطبّق ورقة "إسناد الأدوار" (FR-AUTH-005, 014, 022 · BR-AUTH-004).
@@ -61,6 +62,18 @@ class RoleAssignmentService
         });
 
         $this->flush($target);
+
+        DB::afterCommit(function () use ($target, $role, $scope, $actor) {
+
+            event(new UserRolesChanged(
+                user: $target->fresh(),
+                action: 'assigned',
+                role: $role->name,
+                scopeId: (int) $scope->getKey(),
+                actorId: $actor->getKey(),
+            ));
+
+        });
     }
 
     /** @throws RoleAssignmentException */
@@ -78,6 +91,18 @@ class RoleAssignmentService
         });
 
         $this->flush($target);
+
+        DB::afterCommit(function () use ($target, $role, $scope, $actor) {
+
+            event(new UserRolesChanged(
+                user: $target->fresh(),
+                action: 'revoked',
+                role: $role->name,
+                scopeId: (int) $scope->getKey(),
+                actorId: $actor->getKey(),
+            ));
+
+        });
     }
 
     /** نفس فحوص assign دون كتابة — لـ FormRequest::authorize() أو لإظهار الأزرار. */
@@ -111,9 +136,19 @@ class RoleAssignmentService
         DB::transaction(function () use ($target, $role, $scope, $reason) {
             $this->write($target, $role, $scope, null, $reason, null);
             $this->audit(null, $target, $role, $scope, 'role_assigned', $reason);
+
+            DB::afterCommit(function () use ($target, $role, $scope) {
+                event(new UserRolesChanged(
+                    user: $target->fresh(),
+                    action: 'assigned',
+                    role: $role->name,
+                    scopeId: (int) $scope->getKey(),
+                    actorId: null,
+                ));
+            });
         });
 
-        $this->flush($target);
+
     }
 
     /** يسحب الإسنادات المنتهية (expires_at) ويسجّل ذلك — مجدول يوميًا في routes/console.php. */

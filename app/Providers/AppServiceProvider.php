@@ -10,6 +10,7 @@ use App\Services\Notifications\LogSmsProvider;
 use App\Services\Rbac\AccessResolver;
 use App\Services\Rbac\MfaGuard;
 use Database\Seeders\Rbac\RbacCatalog;
+use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 

@@ -42,4 +42,8 @@ class SessionService
             ->get()
             ->each(fn (UserSession $session) => $this->revoke($session, $by, $reason));
     }
+    public function revokeAll(User $user, ?User $by, string $reason = 'security'): void
+    {
+        $this->revokeAllExcept($user, null, $by, $reason);
+    }
 }
