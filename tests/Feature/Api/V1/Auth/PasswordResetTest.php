@@ -1,93 +1,106 @@
 <?php
 
 namespace Tests\Feature\Api\V1\Auth;
-
+use RuntimeException;
 use App\Models\AuthEvent;
 use App\Models\PasswordHistory;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Models\VerificationCode;
-use App\Notifications\PasswordResetCodeNotification;
 use App\Services\VerificationCodeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
-
+use App\Services\Notifications\NotificationService;
+use Mockery;
 class PasswordResetTest extends TestCase
 {
     use RefreshDatabase;
 
     public function test_it_returns_a_uniform_response_and_creates_a_code_for_an_existing_email(): void
-    {
-        Notification::fake();
+{
+    $user = User::query()->create([
+        'first_name' => 'Test',
+        'last_name' => 'User',
+        'email' => 'user@example.com',
+        'password' => 'secret-password',
+    ]);
+$notificationService = Mockery::mock(NotificationService::class);
 
-        $user = User::query()->create([
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'user@example.com',
-            'password' => 'secret-password',
-        ]);
+$notificationService->shouldReceive('send')
+    ->once()
+    ->withArgs(function ($notifiable, $type, $data, $options) use ($user) {
+        return $notifiable->is($user)
+            && $type === 'account.password_reset'
+            && !empty($options['secret']);
+    })
+    ->andReturn('notification-id');
 
-        $response = $this->postJson('/api/v1/auth/password/forgot', [
-            'identifier' => $user->email,
-        ]);
+$this->app->instance(NotificationService::class, $notificationService);
 
-        $response->assertStatus(202)
-            ->assertJson([
-                'message' => 'إذا كانت البيانات صحيحة، سيتم إرسال رمز استعادة كلمة المرور.',
-            ])
-            ->assertJsonMissing(['code']);
+$response = $this->postJson('/api/v1/auth/password/forgot', [
+    'identifier' => $user->email,
+]);
 
-        Notification::assertSentTo(
-            $user,
-            PasswordResetCodeNotification::class,
-            fn (PasswordResetCodeNotification $notification, array $channels): bool => $channels === ['mail'],
-        );
+$response->assertStatus(202)
+    ->assertJson([
+        'message' => 'إذا كانت البيانات صحيحة، سيتم إرسال رمز استعادة كلمة المرور.',
+    ])
+    ->assertJsonMissing(['code']);
 
-        $this->assertDatabaseHas('verification_codes', [
-            'user_id' => $user->getKey(),
-            'channel' => 'email',
-            'destination' => $user->email,
-            'purpose' => 'password_reset',
-            'max_attempts' => 5,
-        ]);
-        $this->assertDatabaseHas('auth_events', [
-            'user_id' => $user->getKey(),
-            'event' => 'password_reset_requested',
-        ]);
-    }
+$this->assertDatabaseHas('verification_codes', [
+    'user_id' => $user->getKey(),
+    'channel' => 'email',
+    'destination' => $user->email,
+    'purpose' => 'password_reset',
+    'max_attempts' => 5,
+]);
 
-    public function test_it_returns_the_same_response_without_creating_a_code_for_an_unknown_identifier(): void
-    {
-        Notification::fake();
+$this->assertDatabaseHas('auth_events', [
+    'user_id' => $user->getKey(),
+    'event' => 'password_reset_requested',
+]);
+}
 
-        $existingUser = User::query()->create([
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'user@example.com',
-            'password' => 'secret-password',
-        ]);
+   public function test_it_returns_the_same_response_without_creating_a_code_for_an_unknown_identifier(): void
+{
+    $existingUser = User::query()->create([
+        'first_name' => 'Test',
+        'last_name' => 'User',
+        'email' => 'user@example.com',
+        'password' => 'secret-password',
+    ]);
+$notificationService = Mockery::mock(NotificationService::class);
 
-        $existingResponse = $this->postJson('/api/v1/auth/password/forgot', [
-            'identifier' => $existingUser->email,
-        ]);
+$notificationService->shouldReceive('send')
+    ->once()
+    ->withArgs(fn ($notifiable, $type, $data, $options) =>
+        $notifiable->is($existingUser)
+        && $type === 'account.password_reset'
+        && !empty($options['secret'])
+    )
+    ->andReturn('notification-id');
 
-        $this->assertSame(1, $this->getCodeCount());
-        $this->assertSame(1, AuthEvent::query()->where('event', 'password_reset_requested')->count());
+$this->app->instance(NotificationService::class, $notificationService);
 
-        $unknownResponse = $this->postJson('/api/v1/auth/password/forgot', [
-            'identifier' => 'unknown@example.com',
-        ]);
+$existingResponse = $this->postJson('/api/v1/auth/password/forgot', [
+    'identifier' => $existingUser->email,
+]);
 
-        $unknownResponse->assertStatus(202)
-            ->assertJsonMissing(['code']);
-        $this->assertSame($existingResponse->json(), $unknownResponse->json());
-        $this->assertSame(1, $this->getCodeCount());
-        $this->assertSame(1, AuthEvent::query()->where('event', 'password_reset_requested')->count());
-        Notification::assertSentTo($existingUser, PasswordResetCodeNotification::class);
-        Notification::assertCount(1);
-    }
+$this->assertSame(1, $this->getCodeCount());
+$this->assertSame(1, AuthEvent::query()->where('event', 'password_reset_requested')->count());
+
+$unknownResponse = $this->postJson('/api/v1/auth/password/forgot', [
+    'identifier' => 'unknown@example.com',
+]);
+
+$unknownResponse->assertStatus(202)
+    ->assertJsonMissing(['code']);
+
+$this->assertSame($existingResponse->json(), $unknownResponse->json());
+$this->assertSame(1, $this->getCodeCount());
+$this->assertSame(1, AuthEvent::query()->where('event', 'password_reset_requested')->count());
+}
 
     public function test_it_issues_and_verifies_a_password_reset_code(): void
     {
@@ -149,7 +162,12 @@ class PasswordResetTest extends TestCase
             'failed_login_count' => 3,
             'locked_until' => now()->addMinutes(10),
         ])->save();
-        $result = app(VerificationCodeService::class)->issue('email', $user->email, $user->getKey());
+        $notificationService = Mockery::mock(NotificationService::class);
+$notificationService->shouldReceive('send')
+    ->once()
+->andReturn('notification-id');
+    $this->app->instance(NotificationService::class, $notificationService);
+    $result = app(VerificationCodeService::class)->issue('email', $user->email, $user->getKey());
 
         $response = $this->postJson('/api/v1/auth/password/reset', [
             'identifier' => $user->email,
@@ -173,7 +191,43 @@ class PasswordResetTest extends TestCase
             'event' => 'password_reset_completed',
         ]);
     }
+public function test_password_reset_succeeds_when_notification_fails(): void
+{
+    $user = User::query()->create([
+        'first_name' => 'Test',
+        'last_name' => 'User',
+        'email' => 'notification-failure@example.com',
+        'password' => 'old-password-123',
+    ]);
 
+    $result = app(VerificationCodeService::class)->issue('email', $user->email, $user->getKey());
+
+    $notificationService = Mockery::mock(NotificationService::class);
+
+    $notificationService->shouldReceive('send')
+        ->once()
+->withArgs(function ($notifiable, $type) use ($user) {
+    return $notifiable instanceof User
+        && $notifiable->is($user)
+        && $type === 'security.password_changed';
+})
+->andThrow(new RuntimeException('Notification failed'));
+
+    $this->app->instance(NotificationService::class, $notificationService);
+
+    $response = $this->postJson('/api/v1/auth/password/reset', [
+        'identifier' => $user->email,
+        'code' => $result['code'],
+        'password' => 'new-password-123',
+        'password_confirmation' => 'new-password-123',
+    ]);
+
+    $response->assertOk();
+
+    $this->assertTrue(
+        Hash::check('new-password-123', $user->fresh()->getRawOriginal('password'))
+    );
+}
     public function test_it_rejects_an_invalid_reset_code_without_changing_the_password(): void
     {
         $user = User::query()->create([

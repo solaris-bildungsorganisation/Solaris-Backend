@@ -9,12 +9,13 @@ use App\Models\AuthEvent;
 use App\Models\PasswordHistory;
 use App\Models\User;
 use App\Models\VerificationCode;
-use App\Notifications\PasswordResetCodeNotification;
 use App\Services\SessionService;
 use App\Services\VerificationCodeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
+use App\Services\Notifications\NotificationService;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 class PasswordResetController extends Controller
 {
     public function __invoke(
@@ -40,9 +41,21 @@ class PasswordResetController extends Controller
                 ipAddress: $request->ip(),
             );
 
-            if ($user->email) {
-                $user->notify(new PasswordResetCodeNotification($issuedCode['code']));
-            }
+    if ($destination) {
+    try {
+        app(NotificationService::class)->send(
+            $user,
+            'account.password_reset',
+            [],
+            ['secret' => $issuedCode['code']]
+        );
+    } catch (Throwable $e) {
+        Log::warning('Failed to send password reset code notification.', [
+            'user_id' => $user->getKey(),
+            'error' => $e->getMessage(),
+        ]);
+    }
+}
 
             AuthEvent::query()->create([
                 'user_id' => $user->getKey(),
@@ -57,11 +70,11 @@ class PasswordResetController extends Controller
         ], 202);
     }
 
-    public function reset(
-        ResetPasswordRequest $request,
-        VerificationCodeService $verificationCodeService,
-        SessionService $sessionService,
-    ) {
+    public function reset(ResetPasswordRequest $request,
+    VerificationCodeService $verificationCodeService,
+    SessionService $sessionService,
+    NotificationService $notificationService,
+) {
         $identifier = $request->string('identifier')->toString();
         $user = User::query()->where('email', $identifier)->first();
         $channel = 'email';
@@ -137,13 +150,21 @@ class PasswordResetController extends Controller
         if (! $updated) {
             return $this->invalidResetResponse();
         }
+$sessionService->revokeAllExcept($user, null, null, 'password_changed');
+try {
+    $notificationService->send($user, 'security.password_changed');
+} catch (Throwable $exception) {
+    Log::warning('Failed to send password changed notification.', [
+        'user_id' => $user->getKey(),
+    ]);
+}
 
-        $sessionService->revokeAllExcept($user, null, null, 'password_changed');
-
-        return response()->json([
-            'message' => 'تمت إعادة تعيين كلمة المرور بنجاح.',
-        ]);
+return response()->json([
+    'message' => 'تمت إعادة تعيين كلمة المرور بنجاح.',
+]);
     }
+
+
 
     private function invalidResetResponse()
     {

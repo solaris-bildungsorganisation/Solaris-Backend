@@ -43,6 +43,8 @@ class NotificationCatalogSeeder extends Seeder
             ['job.application_status', 'job', 'حالة طلب التوظيف', 'Application status', 'personal', false, ['in_app', 'email']],
             ['finance.transaction_status', 'finance', 'حالة عملية مالية', 'Transaction status', 'sensitive', true, ['in_app']],
             ['admin.announcement', 'admin', 'إعلان إداري', 'Admin announcement', 'public', false, ['in_app']],
+            ['security.password_changed', 'security', 'تم تغيير كلمة المرور', 'Password changed', 'personal', true,['in_app', 'email']],
+            ['security.sessions_terminated', 'security', 'تم إنهاء الجلسات', 'Sessions terminated', 'personal', true, ['in_app', 'email']],
         ];
         $rows = [];
         foreach ($types as [$key, $cat, $ar, $en, $sens, $mandatory, $ch]) {

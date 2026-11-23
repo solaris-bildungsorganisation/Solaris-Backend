@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services\Rbac;
-
+use App\Events\UserRolesChanged;
 use App\Models\AccessScope;
 use App\Models\OrganizationMembership;
 use App\Models\Role;
@@ -61,6 +61,7 @@ class RoleAssignmentService
         });
 
         $this->flush($target);
+event(new UserRolesChanged($target->fresh(), 'assigned', $role->name, (int) $scope->getKey(), $actor->getKey()));
     }
 
     /** @throws RoleAssignmentException */
@@ -78,6 +79,7 @@ class RoleAssignmentService
         });
 
         $this->flush($target);
+        event(new UserRolesChanged($target->fresh(), 'revoked', $role->name, (int) $scope->getKey(), $actor->getKey()));
     }
 
     /** نفس فحوص assign دون كتابة — لـ FormRequest::authorize() أو لإظهار الأزرار. */
@@ -114,6 +116,7 @@ class RoleAssignmentService
         });
 
         $this->flush($target);
+        event(new UserRolesChanged($target->fresh(), 'assigned', $role->name, (int) $scope->getKey(), null));
     }
 
     /** يسحب الإسنادات المنتهية (expires_at) ويسجّل ذلك — مجدول يوميًا في routes/console.php. */

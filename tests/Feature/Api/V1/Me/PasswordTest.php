@@ -5,6 +5,8 @@ namespace Tests\Feature\Api\V1\Me;
 use App\Models\PasswordHistory;
 use App\Models\User;
 use App\Models\UserSession;
+use App\Services\Notifications\NotificationService;
+use Mockery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -17,6 +19,18 @@ class PasswordTest extends TestCase
     public function test_authenticated_user_can_change_password(): void
     {
         $user = $this->makeUser('current-password-123');
+        $notificationService = Mockery::mock(NotificationService::class);
+
+$notificationService->shouldReceive('send')
+    ->once()
+    ->withArgs(function ($notifiable, $type) use ($user) {
+        return $notifiable instanceof User
+            && $notifiable->is($user)
+            && $type === 'security.password_changed';
+    })
+    ->andReturn('notification-id');
+
+$this->app->instance(NotificationService::class, $notificationService);
         Sanctum::actingAs($user);
 
         $response = $this->putJson('/api/v1/me/password', [
@@ -37,7 +51,37 @@ class PasswordTest extends TestCase
             'event' => 'password_changed',
         ]);
     }
+public function test_password_change_succeeds_when_notification_fails(): void
+{
+    $user = $this->makeUser('current-password-123');
 
+    $notificationService = Mockery::mock(NotificationService::class);
+
+    $notificationService->shouldReceive('send')
+        ->once()
+        ->withArgs(function ($notifiable, $type) use ($user) {
+            return $notifiable instanceof User
+                && $notifiable->is($user)
+                && $type === 'security.password_changed';
+        })
+        ->andThrow(new \RuntimeException('Notification failed'));
+
+    $this->app->instance(NotificationService::class, $notificationService);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->putJson('/api/v1/me/password', [
+        'current_password' => 'current-password-123',
+        'password' => 'new-password-123',
+        'password_confirmation' => 'new-password-123',
+    ]);
+
+    $response->assertOk();
+
+    $this->assertTrue(
+        Hash::check('new-password-123', $user->fresh()->getRawOriginal('password'))
+    );
+}
     public function test_it_requires_authentication_to_change_password(): void
     {
         $response = $this->putJson('/api/v1/me/password', [

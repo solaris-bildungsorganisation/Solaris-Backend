@@ -1,7 +1,7 @@
 <?php
 
 namespace Tests\Feature\Api\V1\Security;
-
+use App\Services\Notifications\NotificationService;
 use App\Models\AccessScope;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -111,4 +111,64 @@ class GateAndMfaTest extends TestCase
             ->deleteJson("/api/v1/admin/users/{$target->uuid}/sessions", ['reason' => 'security incident'])
             ->assertNoContent();
     }
+    public function test_admin_session_termination_sends_notification(): void{
+config(['solaris.mfa.mode' => 'warn']);
+$admin = $this->userWithRole('platform_admin');
+$target = User::factory()->create();
+$token = $target->createToken('target-session');
+$session = $target->sessions()->create([
+    'personal_access_token_id' => $token->accessToken->id,
+    'last_activity_at' => now(),
+    'expires_at' => now()->addDay(),
+]);
+$this->mock(NotificationService::class)
+    ->shouldReceive('send')
+    ->once()
+   ->with(\Mockery::on(fn ($user) => $user->is($target)), 'security.sessions_terminated');
+    $this->withToken($this->loginAs($admin))
+    ->deleteJson("/api/v1/admin/users/{$target->uuid}/sessions", [
+        'reason' => 'security incident',
+    ])
+    ->assertNoContent();
+$this->assertNotNull($session->fresh()->revoked_at);
+}
+public function test_session_termination_succeeds_when_notification_fails(): void{
+config(['solaris.mfa.mode' => 'warn']);
+$admin = $this->userWithRole('platform_admin');
+$target = User::factory()->create();
+$token = $target->createToken('target-session');
+$session = $target->sessions()->create([
+    'personal_access_token_id' => $token->accessToken->id,
+    'last_activity_at' => now(),
+    'expires_at' => now()->addDay(),
+]);
+$this->mock(NotificationService::class)
+    ->shouldReceive('send')
+    ->once()
+    ->andThrow(new \RuntimeException('Notification failed'));
+
+$this->withToken($this->loginAs($admin))
+    ->deleteJson("/api/v1/admin/users/{$target->uuid}/sessions", [
+        'reason' => 'security incident',
+    ])
+    ->assertNoContent();
+    $this->assertNotNull($session->fresh()->revoked_at);
+}
+public function test_no_notification_is_sent_when_target_has_no_active_sessions(): void
+
+{
+config(['solaris.mfa.mode' => 'warn']);
+$admin = $this->userWithRole('platform_admin');
+$target = User::factory()->create();
+
+$this->mock(NotificationService::class)
+    ->shouldNotReceive('send');
+
+$this->withToken($this->loginAs($admin))
+    ->deleteJson("/api/v1/admin/users/{$target->uuid}/sessions", [
+        'reason' => 'security incident',
+    ])
+    ->assertNoContent();
+
+}
 }

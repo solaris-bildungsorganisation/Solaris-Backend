@@ -4,9 +4,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use App\Services\SessionService;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
-
+use Throwable;
 class LoginController extends Controller
 {
     #[OA\Post(
@@ -99,10 +101,55 @@ if (! Hash::check($data['password'], $user->password)) {
         $user->locked_until = null;
         $user->last_login_at = now();
         $user->last_login_ip = request()->ip();
-        $user->save();
-        $newToken = $user->createToken('api');
-        app(SessionService::class)->start($user, $newToken, $request);
-        $token = $newToken->plainTextToken;
+       $user->save();
+
+    $isNewDevice = ! $user->sessions()
+        ->where('user_agent', $request->userAgent())
+        ->where('created_at', '>=', now()->subDays(30))
+        ->exists();
+
+    $newToken = $user->createToken('api');
+    app(SessionService::class)->start($user, $newToken, $request);
+
+    if ($isNewDevice) {
+        try {
+            app(NotificationService::class)->send(
+                $user,
+                'security.new_login'
+            );
+        } catch (Throwable $e) {
+            Log::warning('Failed to send new login notification.', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    $token = $newToken->plainTextToken;   $user->save();
+
+$isNewDevice = ! $user->sessions()
+    ->where('user_agent', $request->userAgent())
+    ->where('created_at', '>=', now()->subDays(30))
+    ->exists();
+
+$newToken = $user->createToken('api');
+app(SessionService::class)->start($user, $newToken, $request);
+
+if ($isNewDevice) {
+    try {
+        app(NotificationService::class)->send(
+            $user,
+            'security.new_login'
+        );
+    } catch (Throwable $e) {
+        Log::warning('Failed to send new login notification.', [
+            'user_id' => $user->id,
+            'error' => $e->getMessage(),
+        ]);
+    }
+}
+
+$token = $newToken->plainTextToken;
 
         return response()->json([
             'message' => '.تم تسجيل الدخول بنجاح',
