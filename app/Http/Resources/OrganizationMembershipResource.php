@@ -14,6 +14,12 @@ class OrganizationMembershipResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+         return [
+            'membership_type' => $this->membership_type,
+            'status' => $this->status,
+            'title' => $this->title,
+            'joined_at' => $this->joined_at,
+            'organization' => new OrganizationResource($this->whenLoaded('organization')),
+        ];
     }
 }

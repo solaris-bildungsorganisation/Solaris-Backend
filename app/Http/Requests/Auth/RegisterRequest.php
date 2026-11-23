@@ -29,8 +29,13 @@ class RegisterRequest extends FormRequest
  'email' =>
  ['nullable', 'required_without:phone',
   'email', 'unique:users,email'],
-'phone' => ['nullable', 'required_without:email',
- 'string', 'unique:users,phone'],
+'phone' => [
+    'required_without:email',
+    'nullable',
+    'string',
+    'regex:/^\+?[0-9]{7,15}$/',
+    'unique:users,phone',
+],
 'account_type' => ['nullable', 'string'],
 'password' => ['required', 'string', 'min:12', 'confirmed'],
 ];
