@@ -16,3 +16,4 @@ Artisan::command('rbac:prune-expired-roles', function (RoleAssignmentService $se
 })->purpose('Remove expired role assignments and log them');
 
 Schedule::command('rbac:prune-expired-roles')->hourly()->withoutOverlapping();
+Schedule::command('sanctum:prune-expired --hours=24')->daily();

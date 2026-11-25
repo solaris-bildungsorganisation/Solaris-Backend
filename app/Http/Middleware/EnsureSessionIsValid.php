@@ -24,9 +24,12 @@ class EnsureSessionIsValid
             return $next($request);
         }
 
-        if ($session->revoked_at || ($session->expires_at && $session->expires_at->isPast())) {
+       if ($session->revoked_at || ($session->expires_at && $session->expires_at->isPast())) {
+            $request->user()->currentAccessToken()?->delete();
+
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
+        
 
         // تحديث مرة بالدقيقة كحد أقصى
         if (! $session->last_activity_at || $session->last_activity_at->diffInSeconds(now()) >= 60) {

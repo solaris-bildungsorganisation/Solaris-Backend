@@ -100,7 +100,11 @@ if (! Hash::check($data['password'], $user->password)) {
         $user->last_login_at = now();
         $user->last_login_ip = request()->ip();
         $user->save();
-        $newToken = $user->createToken('api');
+        $newToken = $user->createToken(
+        'api',
+        ['*'],
+        now()->addDays(config('solaris.session_lifetime_days')));
+        
         app(SessionService::class)->start($user, $newToken, $request);
         $token = $newToken->plainTextToken;
 
