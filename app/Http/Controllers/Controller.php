@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 
 
 
@@ -14,6 +15,7 @@ use AuthorizesRequests, ValidatesRequests;
 
 class Controller extends BaseController
 {
+use AuthorizesRequests,ValidatesRequests;
 
     //
 }

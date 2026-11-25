@@ -10,6 +10,172 @@
         }
     ],
     "paths": {
+        "/v1/admin/countries": {
+            "get": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "قائمة الدول",
+                "operationId": "adminCountriesIndex",
+                "responses": {
+                    "200": {
+                        "description": "صفحة الدول"
+                    },
+                    "401": {
+                        "description": "غير مصادق"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "إنشاء دولة",
+                "operationId": "adminCountriesStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء الدولة"
+                    },
+                    "401": {
+                        "description": "غير مصادق"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    },
+                    "422": {
+                        "description": "مدخلات غير صحيحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/countries/{country}": {
+            "get": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "عرض دولة",
+                "operationId": "adminCountriesShow",
+                "parameters": [
+                    {
+                        "name": "country",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "الدولة"
+                    },
+                    "404": {
+                        "description": "غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "حذف أو تعطيل دولة مستخدمة",
+                "operationId": "adminCountriesDestroy",
+                "parameters": [
+                    {
+                        "name": "country",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "حُذفت الدولة أو عُطلت إذا كانت مستخدمة"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "تعديل دولة",
+                "operationId": "adminCountriesUpdate",
+                "parameters": [
+                    {
+                        "name": "country",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التعديل"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    },
+                    "422": {
+                        "description": "مدخلات غير صحيحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/admin/organizations/{organization}/verify": {
             "post": {
                 "tags": [
@@ -40,6 +206,308 @@
                     },
                     "404": {
                         "description": "المؤسسة غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/region-policies": {
+            "get": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "عرض سياسات المناطق ضمن النطاق",
+                "operationId": "adminRegionPoliciesIndex",
+                "responses": {
+                    "200": {
+                        "description": "صفحة السياسات"
+                    },
+                    "401": {
+                        "description": "غير مصادق"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "إنشاء سياسة منطقة",
+                "operationId": "adminRegionPoliciesStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء السياسة"
+                    },
+                    "403": {
+                        "description": "الصلاحية أو MFA غير متحققين"
+                    },
+                    "422": {
+                        "description": "مدخلات غير صحيحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/region-policies/{policy}": {
+            "delete": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "حذف سياسة منطقة",
+                "operationId": "adminRegionPoliciesDestroy",
+                "parameters": [
+                    {
+                        "name": "policy",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم الحذف"
+                    },
+                    "403": {
+                        "description": "الصلاحية أو MFA غير متحققين"
+                    },
+                    "404": {
+                        "description": "غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "تعديل سياسة منطقة",
+                "operationId": "adminRegionPoliciesUpdate",
+                "parameters": [
+                    {
+                        "name": "policy",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التعديل"
+                    },
+                    "403": {
+                        "description": "الصلاحية أو MFA غير متحققين"
+                    },
+                    "404": {
+                        "description": "غير موجودة"
+                    },
+                    "422": {
+                        "description": "مدخلات غير صحيحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/regions": {
+            "get": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "قائمة المناطق",
+                "operationId": "adminRegionsIndex",
+                "responses": {
+                    "200": {
+                        "description": "صفحة المناطق"
+                    },
+                    "401": {
+                        "description": "غير مصادق"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "إنشاء منطقة",
+                "operationId": "adminRegionsStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء المنطقة"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    },
+                    "422": {
+                        "description": "مدخلات غير صحيحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/regions/{region}": {
+            "get": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "عرض منطقة",
+                "operationId": "adminRegionsShow",
+                "parameters": [
+                    {
+                        "name": "region",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "المنطقة"
+                    },
+                    "404": {
+                        "description": "غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "حذف أو تعطيل منطقة مستخدمة",
+                "operationId": "adminRegionsDestroy",
+                "parameters": [
+                    {
+                        "name": "region",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "حُذفت المنطقة أو عُطلت"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin Geo"
+                ],
+                "summary": "تعديل منطقة",
+                "operationId": "adminRegionsUpdate",
+                "parameters": [
+                    {
+                        "name": "region",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم التعديل"
+                    },
+                    "403": {
+                        "description": "لا توجد صلاحية"
+                    },
+                    "422": {
+                        "description": "مدخلات غير صحيحة"
                     }
                 },
                 "security": [
@@ -451,6 +919,191 @@
                 ]
             }
         },
+        "/v1/me/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "قائمة إشعاراتي",
+                "description": "الأحدث أولاً، مع فلتر unread وcategory.",
+                "operationId": "425b93deccb23458bcc9cc51f546ab00",
+                "parameters": [
+                    {
+                        "name": "unread",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب الإشعارات"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "422": {
+                        "description": "بيانات غير صالحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/notifications/unread-count": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "عدد الإشعارات غير المقروءة",
+                "operationId": "fa09e559d5f37f7f61fccfe24feb4bbc",
+                "responses": {
+                    "200": {
+                        "description": "تم جلب العدد"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/notifications/{id}/read": {
+            "patch": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "تعليم إشعار كمقروء",
+                "operationId": "0d4769e22992224a50c1c143410232fb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID الإشعار",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم تعليم الإشعار كمقروء"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "404": {
+                        "description": "الإشعار غير موجود أو لا يخص المستخدم"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/notifications/read-all": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "تعليم كل الإشعارات كمقروءة",
+                "operationId": "dcbec87fc78e5f93de5bd213fb484b75",
+                "responses": {
+                    "204": {
+                        "description": "تم تعليم الكل كمقروء"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/me/notifications/{id}": {
+            "delete": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "حذف إشعار من قائمتي",
+                "operationId": "ca33a00c27972a62bb648cfc574aa567",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID الإشعار",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "تم حذف الإشعار"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "404": {
+                        "description": "الإشعار غير موجود أو لا يخص المستخدم"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/me/permissions": {
             "get": {
                 "tags": [
@@ -745,6 +1398,61 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/v1/meta/countries": {
+            "get": {
+                "tags": [
+                    "Meta"
+                ],
+                "summary": "الدول النشطة",
+                "operationId": "metaCountriesIndex",
+                "responses": {
+                    "200": {
+                        "description": "قائمة الدول النشطة"
+                    }
+                }
+            }
+        },
+        "/v1/meta/countries/{country}/regions": {
+            "get": {
+                "tags": [
+                    "Meta"
+                ],
+                "summary": "المناطق النشطة التابعة لدولة",
+                "operationId": "metaCountryRegions",
+                "parameters": [
+                    {
+                        "name": "country",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة المناطق النشطة"
+                    },
+                    "404": {
+                        "description": "الدولة غير موجودة"
+                    }
+                }
+            }
+        },
+        "/v1/meta/languages": {
+            "get": {
+                "tags": [
+                    "Meta"
+                ],
+                "summary": "اللغات النشطة",
+                "operationId": "metaLanguagesIndex",
+                "responses": {
+                    "200": {
+                        "description": "قائمة اللغات النشطة"
+                    }
+                }
             }
         },
         "/v1/organizations": {
@@ -1249,6 +1957,10 @@
     },
     "tags": [
         {
+            "name": "Admin Geo",
+            "description": "Admin Geo"
+        },
+        {
             "name": "Admin Organizations",
             "description": "Admin Organizations"
         },
@@ -1265,12 +1977,20 @@
             "description": "Profile - Languages"
         },
         {
+            "name": "Notifications",
+            "description": "Notifications"
+        },
+        {
             "name": "Me",
             "description": "Me"
         },
         {
             "name": "Profile",
             "description": "Profile"
+        },
+        {
+            "name": "Meta",
+            "description": "Meta"
         },
         {
             "name": "Organizations",

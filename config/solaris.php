@@ -28,5 +28,11 @@ return [
     'mfa' => [
         'mode' => env('SOLARIS_MFA_MODE', 'warn'),
     ],
+    
+    'region_policy_keys' => [
+        'courses.free_access' => ['type' => 'boolean'],
+    ],
+
+    'geo_reference_cache_seconds' => 3600,
 
 ];

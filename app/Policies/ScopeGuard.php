@@ -301,6 +301,7 @@ class ScopeGuard
             $model instanceof SuccessStory,
             $model instanceof MetricSnapshot => self::constrainByColumns($q, $scope, 'country_id', 'region_id', 'organization_id'),
             $model instanceof ReportExport => self::constrainByColumns($q, $scope, 'filters->country_id', 'filters->region_id', 'organization_id'),
+            $model instanceof RegionAccessPolicy => self::constrainRegionPolicies($q, $scope),
             default => $q->whereRaw('1 = 0'),
         };
     }
@@ -346,6 +347,47 @@ class ScopeGuard
         };
     }
 
+        private static function constrainRegionPolicies(Builder $q, AccessScope $scope): void
+    {
+        $country = $q->qualifyColumn('country_id');
+        $region = $q->qualifyColumn('region_id');
+
+        $globalPolicy = fn (Builder $where) => $where->whereNull($country)->whereNull($region);
+
+        match ($scope->type) {
+            AccessScope::TYPE_COUNTRY => $q->where(function (Builder $where) use ($globalPolicy, $country, $scope) {
+                $where->where(fn (Builder $global) => $globalPolicy($global))
+                    ->orWhere($country, $scope->country_id);
+            }),
+            AccessScope::TYPE_REGION => self::constrainRegionPoliciesForRegion(
+                $q,
+                $scope,
+                $country,
+                $region,
+                $globalPolicy,
+            ),
+            default => $q->whereRaw('1 = 0'),
+        };
+    }
+
+    private static function constrainRegionPoliciesForRegion(
+        Builder $q,
+        AccessScope $scope,
+        string $countryColumn,
+        string $regionColumn,
+        \Closure $globalPolicy,
+    ): void {
+        $tree = self::regionSubtree((int) $scope->region_id);
+        $countryId = Region::query()->whereKey($scope->region_id)->value('country_id');
+
+        $q->where(function (Builder $where) use ($globalPolicy, $countryColumn, $regionColumn, $tree, $countryId) {
+            $where->where(fn (Builder $global) => $globalPolicy($global))
+                ->orWhereIn($regionColumn, $tree)
+                ->orWhere(function (Builder $countryPolicy) use ($countryColumn, $regionColumn, $countryId) {
+                    $countryPolicy->whereNull($regionColumn)->where($countryColumn, $countryId);
+                });
+        });
+    }
     private static function constrainByColumns(Builder $q, AccessScope $scope, string $country, string $region, string $organization): void
     {
         match ($scope->type) {
