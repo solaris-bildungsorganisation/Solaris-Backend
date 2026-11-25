@@ -7,16 +7,17 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', RegisterController::class);
+    Route::post('/register', RegisterController::class)
+        ->middleware('throttle:auth-register');
+
     Route::post('/login', LoginController::class)
-        ->middleware('throttle:5,1');
+        ->middleware('throttle:login-auth');
 
     Route::post('/password/forgot', PasswordResetController::class)
-        ->middleware('throttle:5,1');
+        ->middleware('throttle:code-auth');
 
     Route::post('/password/reset', [PasswordResetController::class, 'reset'])
-        ->middleware('throttle:5,1');
-
+        ->middleware('throttle:code-auth');
     Route::post('/logout', LogoutController::class)
         ->middleware('auth:sanctum');
 });
