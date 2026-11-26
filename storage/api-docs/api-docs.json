@@ -176,6 +176,444 @@
                 ]
             }
         },
+        "/v1/admin/notification-templates": {
+            "get": {
+                "tags": [
+                    "Admin - Notifications"
+                ],
+                "summary": "عرض قوالب الإشعارات",
+                "operationId": "121586998754a8f09303dd3ff3b62b76",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "معرّف نوع الإشعار أو مفتاحه",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "security.new_login"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "description": "معرّف القناة أو مفتاحها",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "email"
+                        }
+                    },
+                    {
+                        "name": "language",
+                        "in": "query",
+                        "description": "معرّف اللغة أو رمزها",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "ar"
+                        }
+                    },
+                    {
+                        "name": "active",
+                        "in": "query",
+                        "description": "تصفية حسب حالة التفعيل",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة قوالب الإشعارات مع العلاقات المحمّلة",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية عرض قوالب الإشعارات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin - Notifications"
+                ],
+                "summary": "إنشاء إصدار جديد من قالب إشعار",
+                "operationId": "8ff3a3fc27f77e2ebe539aa7bf403dd7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "notification_type_id",
+                                    "channel_id",
+                                    "language_id",
+                                    "body"
+                                ],
+                                "properties": {
+                                    "notification_type_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "channel_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "language_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "مرحبًا {{ name }}",
+                                        "nullable": true
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "example": "تفاصيل الإشعار: {{ message }}"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء إصدار القالب",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية إنشاء قالب إشعار"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات أو قيود حساسية القنوات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/notification-templates/{template}": {
+            "patch": {
+                "tags": [
+                    "Admin - Notifications"
+                ],
+                "summary": "تحديث حالة قالب إشعار",
+                "operationId": "ee979f26b22a9fad3384a0643f5faff5",
+                "parameters": [
+                    {
+                        "name": "template",
+                        "in": "path",
+                        "description": "معرّف القالب",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث حالة القالب",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية تحديث القالب"
+                    },
+                    "404": {
+                        "description": "القالب غير موجود"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/notification-templates/{template}/preview": {
+            "post": {
+                "tags": [
+                    "Admin - Notifications"
+                ],
+                "summary": "معاينة قالب إشعار",
+                "operationId": "2aaf31273e09d975cfb1f877b4790564",
+                "parameters": [
+                    {
+                        "name": "template",
+                        "in": "path",
+                        "description": "معرّف القالب",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "data": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "additionalProperties": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "نص الموضوع والمتن بعد المعاينة",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "subject": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "body": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية معاينة القالب"
+                    },
+                    "404": {
+                        "description": "القالب غير موجود"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من بيانات المعاينة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/notification-types": {
+            "get": {
+                "tags": [
+                    "Admin - Notifications"
+                ],
+                "summary": "عرض أنواع الإشعارات",
+                "operationId": "310fd55527e658e9a2312aca4eeea21a",
+                "responses": {
+                    "200": {
+                        "description": "قائمة أنواع الإشعارات مع عدد القوالب النشطة",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية عرض أنواع الإشعارات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/notification-types/{type}": {
+            "patch": {
+                "tags": [
+                    "Admin - Notifications"
+                ],
+                "summary": "تحديث إعدادات نوع إشعار",
+                "operationId": "61ec61c72fe0042cfacf8529e107087d",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "معرّف نوع الإشعار",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "description": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "default_channels": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث نوع الإشعار",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية تحديث نوع الإشعار"
+                    },
+                    "404": {
+                        "description": "نوع الإشعار غير موجود"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات أو قيود حساسية القنوات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/admin/organizations/{organization}/verify": {
             "post": {
                 "tags": [
@@ -508,6 +946,371 @@
                     },
                     "422": {
                         "description": "مدخلات غير صحيحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "عرض قائمة المستخدمين مع إمكانية التصفية والترقيم",
+                "operationId": "7af0ac677b43588f94e057499222fe73",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "تصفية حسب الاسم",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "تصفية حسب البريد الإلكتروني",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phone",
+                        "in": "query",
+                        "description": "تصفية حسب رقم الهاتف",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "تصفية حسب حالة الحساب",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "country_id",
+                        "in": "query",
+                        "description": "تصفية حسب معرف الدولة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "region_id",
+                        "in": "query",
+                        "description": "تصفية حسب معرف المنطقة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "تصفية حسب الدور",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "context",
+                        "in": "query",
+                        "description": "تصفية حسب السياق",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "organization",
+                        "in": "query",
+                        "description": "تصفية حسب المنظمة",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "عدد العناصر في كل صفحة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب قائمة المستخدمين بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لعرض المستخدمين"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "إنشاء مستخدم جديد",
+                "operationId": "6ed70b9b54cff920607a019cac1e9f73",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "description": "الاسم الأول",
+                                        "type": "string",
+                                        "example": "أحمد",
+                                        "maxLength": 255
+                                    },
+                                    "last_name": {
+                                        "description": "الاسم الأخير",
+                                        "type": "string",
+                                        "example": "محمد",
+                                        "maxLength": 255
+                                    },
+                                    "display_name": {
+                                        "description": "الاسم الظاهر",
+                                        "type": "string",
+                                        "example": "أحمد محمد",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "description": "البريد الإلكتروني (مطلوب في حال عدم إدخال رقم الهاتف)",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ahmed@example.com",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "description": "رقم الهاتف (مطلوب في حال عدم إدخال البريد الإلكتروني)",
+                                        "type": "string",
+                                        "example": "+963912345678",
+                                        "nullable": true,
+                                        "maxLength": 30
+                                    },
+                                    "country_id": {
+                                        "description": "معرف الدولة",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "description": "معرف المنطقة",
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "interface_language_id": {
+                                        "description": "معرف لغة الواجهة",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "timezone": {
+                                        "description": "المنطقة الزمنية",
+                                        "type": "string",
+                                        "example": "Asia/Damascus",
+                                        "nullable": true
+                                    },
+                                    "organization_id": {
+                                        "description": "معرف المنظمة (UUID)",
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                                        "nullable": true
+                                    },
+                                    "membership_type": {
+                                        "description": "نوع العضوية (ممنوع إرساله بدون organization_id)",
+                                        "type": "string",
+                                        "example": "member",
+                                        "nullable": true,
+                                        "enum": [
+                                            "member",
+                                            "staff",
+                                            "learner",
+                                            "instructor",
+                                            "employer_representative",
+                                            "partner_contact",
+                                            "volunteer"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لإنشاء مستخدم"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/users/{user}": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "عرض تفاصيل مستخدم محدد",
+                "operationId": "a26cbc5356a3d0107ca664239c1c0229",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "معرف المستخدم (ID أو UUID حسب التوجيه)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب بيانات المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لعرض هذا المستخدم"
+                    },
+                    "404": {
+                        "description": "المستخدم غير موجود"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "تحديث بيانات مستخدم موجود",
+                "operationId": "170d49164a47436bad2ab2072f0482da",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "معرف المستخدم",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "display_name": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "country_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "interface_language_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث بيانات المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لتعديل هذا المستخدم"
+                    },
+                    "404": {
+                        "description": "المستخدم غير موجود"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
                     }
                 },
                 "security": [
@@ -1961,8 +2764,16 @@
             "description": "Admin Geo"
         },
         {
+            "name": "Admin - Notifications",
+            "description": "Admin - Notifications"
+        },
+        {
             "name": "Admin Organizations",
             "description": "Admin Organizations"
+        },
+        {
+            "name": "Admin - Users",
+            "description": "Admin - Users"
         },
         {
             "name": "Auth",
