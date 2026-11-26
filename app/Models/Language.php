@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,13 +13,30 @@ use Spatie\Translatable\HasTranslations;
 class Language extends Model
 {
     use HasTranslations;
+    use HasUuids;
 
     public array $translatable = ['name'];
 
     protected $fillable = [
-        'code', 'name', 'native_name', 'direction',
-        'is_interface', 'is_content', 'is_active', 'sort_order',
+        'code',
+        'name',
+        'native_name',
+        'direction',
+        'is_interface',
+        'is_content',
+        'is_active',
+        'sort_order',
     ];
+
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
 
     protected function casts(): array
     {
@@ -32,7 +50,8 @@ class Language extends Model
 
     public function scopeActive(Builder $query): void
     {
-        $query->where('is_active', true)->orderBy('sort_order');
+        $query->where('is_active', true)
+            ->orderBy('sort_order');
     }
 
     public function isRtl(): bool
@@ -40,13 +59,11 @@ class Language extends Model
         return $this->direction === 'rtl';
     }
 
-    /** الدول التي تعتبر هذه اللغة افتراضية */
     public function countries(): HasMany
     {
         return $this->hasMany(Country::class, 'default_language_id');
     }
 
-    /** المستخدمون الذين يستخدمونها كلغة واجهة */
     public function interfaceUsers(): HasMany
     {
         return $this->hasMany(User::class, 'interface_language_id');
@@ -57,11 +74,16 @@ class Language extends Model
         return $this->hasMany(UserLanguage::class);
     }
 
-    /** المستخدمون الذين يتقنونها (كفاءة لغوية) */
     public function speakers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_languages')
-            ->withPivot(['id', 'proficiency', 'is_native', 'source', 'verified_at'])
+            ->withPivot([
+                'id',
+                'proficiency',
+                'is_native',
+                'source',
+                'verified_at',
+            ])
             ->withTimestamps();
     }
 

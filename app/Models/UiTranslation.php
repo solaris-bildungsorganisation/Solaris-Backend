@@ -2,13 +2,31 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** ui_translations — ترجمة لكل (group, key, language). */
 class UiTranslation extends Model
 {
-    protected $fillable = ['group', 'key', 'language_id', 'value', 'updated_by'];
+    use HasUuids;
+
+    protected $fillable = [
+        'group',
+        'key',
+        'language_id',
+        'value',
+        'updated_by',
+    ];
+
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
 
     public function language(): BelongsTo
     {

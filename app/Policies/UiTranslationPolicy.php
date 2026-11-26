@@ -10,9 +10,8 @@ class UiTranslationPolicy extends GlobalSettingPolicy
         return 'translations.manage';
     }
 
-    /** بيانات مرجعية تعرضها الواجهة لكل مستخدم. */
     protected function publicRead(): bool
     {
-        return true;
+        return false;
     }
 }

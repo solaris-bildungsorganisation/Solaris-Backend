@@ -10,9 +10,8 @@ class LanguagePolicy extends GlobalSettingPolicy
         return 'languages.manage';
     }
 
-    /** بيانات مرجعية تعرضها الواجهة لكل مستخدم. */
     protected function publicRead(): bool
     {
-        return true;
+        return false;
     }
 }

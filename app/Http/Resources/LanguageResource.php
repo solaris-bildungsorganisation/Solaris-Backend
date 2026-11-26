@@ -7,13 +7,20 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class LanguageResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'uuid' => $this->uuid,
+            'code' => $this->code,
+            'name' => $this->getTranslations('name'),
+            'native_name' => $this->native_name,
+            'direction' => $this->direction,
+            'is_interface' => $this->is_interface,
+            'is_content' => $this->is_content,
+            'is_active' => $this->is_active,
+            'sort_order' => $this->sort_order,
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
+        ];
     }
 }

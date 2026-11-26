@@ -10,6 +10,338 @@
         }
     ],
     "paths": {
+        "/v1/admin/languages": {
+            "get": {
+                "tags": [
+                    "Admin - I18N"
+                ],
+                "summary": "عرض اللغات",
+                "operationId": "57b170ec95a298a51954e56ce3bd70d9",
+                "responses": {
+                    "200": {
+                        "description": "قائمة اللغات"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin - I18N"
+                ],
+                "summary": "إضافة لغة جديدة",
+                "operationId": "c4aea84366cad8fd08bf575f686761ec",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code",
+                                    "name",
+                                    "native_name",
+                                    "direction"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "fr"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "French"
+                                    },
+                                    "native_name": {
+                                        "type": "string",
+                                        "example": "Français"
+                                    },
+                                    "direction": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ltr",
+                                            "rtl"
+                                        ]
+                                    },
+                                    "is_interface": {
+                                        "type": "boolean"
+                                    },
+                                    "is_content": {
+                                        "type": "boolean"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    },
+                                    "sort_order": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء اللغة"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "422": {
+                        "description": "بيانات غير صالحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/languages/{language}": {
+            "patch": {
+                "tags": [
+                    "Admin - I18N"
+                ],
+                "summary": "تعديل إعدادات لغة",
+                "operationId": "364efaaac2cfad204a69bb57de5237d6",
+                "parameters": [
+                    {
+                        "name": "language",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "native_name": {
+                                        "type": "string"
+                                    },
+                                    "direction": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ltr",
+                                            "rtl"
+                                        ]
+                                    },
+                                    "is_interface": {
+                                        "type": "boolean"
+                                    },
+                                    "is_content": {
+                                        "type": "boolean"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    },
+                                    "sort_order": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث اللغة"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "404": {
+                        "description": "اللغة غير موجودة"
+                    },
+                    "422": {
+                        "description": "بيانات غير صالحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/translations": {
+            "get": {
+                "tags": [
+                    "Admin - I18N"
+                ],
+                "summary": "عرض الترجمات",
+                "operationId": "cccd4a633e405d514dd435685b40cc33",
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "key",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "language",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "missing",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "قائمة الترجمات"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "422": {
+                        "description": "بيانات غير صالحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin - I18N"
+                ],
+                "summary": "إضافة أو تحديث الترجمات",
+                "operationId": "1f588613301d8f8d04a8cfc8a0faa997",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "group",
+                                    "key",
+                                    "translations"
+                                ],
+                                "properties": {
+                                    "group": {
+                                        "type": "string",
+                                        "example": "auth"
+                                    },
+                                    "key": {
+                                        "type": "string",
+                                        "example": "login"
+                                    },
+                                    "translations": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "language",
+                                                "value"
+                                            ],
+                                            "properties": {
+                                                "language": {
+                                                    "type": "string",
+                                                    "example": "ar"
+                                                },
+                                                "value": {
+                                                    "type": "string",
+                                                    "example": "تسجيل الدخول"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم حفظ الترجمات"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "422": {
+                        "description": "بيانات غير صالحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/translations/{translation}": {
+            "delete": {
+                "tags": [
+                    "Admin - I18N"
+                ],
+                "summary": "حذف ترجمة",
+                "operationId": "8371c6977aebc3000d644e732d0abbb1",
+                "parameters": [
+                    {
+                        "name": "translation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "تم حذف الترجمة"
+                    },
+                    "403": {
+                        "description": "لا تملك الصلاحية"
+                    },
+                    "404": {
+                        "description": "الترجمة غير موجودة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/admin/users": {
             "get": {
                 "tags": [
@@ -297,7 +629,7 @@
                     {
                         "name": "user",
                         "in": "path",
-                        "description": "معرف المستخدم (ID أو UUID حسب التوجيه)",
+                        "description": "معرف المستخدم",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -311,60 +643,38 @@
                             "schema": {
                                 "properties": {
                                     "first_name": {
-                                        "description": "الاسم الأول",
-                                        "type": "string",
-                                        "example": "أحمد",
-                                        "maxLength": 255
+                                        "type": "string"
                                     },
                                     "last_name": {
-                                        "description": "الاسم الأخير",
-                                        "type": "string",
-                                        "example": "محمد",
-                                        "maxLength": 255
+                                        "type": "string"
                                     },
                                     "display_name": {
-                                        "description": "الاسم الظاهر",
                                         "type": "string",
-                                        "example": "أحمد محمد",
-                                        "nullable": true,
-                                        "maxLength": 255
+                                        "nullable": true
                                     },
                                     "email": {
-                                        "description": "البريد الإلكتروني",
                                         "type": "string",
                                         "format": "email",
-                                        "example": "ahmed@example.com",
                                         "nullable": true
                                     },
                                     "phone": {
-                                        "description": "رقم الهاتف",
                                         "type": "string",
-                                        "example": "+963912345678",
-                                        "nullable": true,
-                                        "maxLength": 30
+                                        "nullable": true
                                     },
                                     "country_id": {
-                                        "description": "معرف الدولة",
                                         "type": "integer",
-                                        "example": 1,
                                         "nullable": true
                                     },
                                     "region_id": {
-                                        "description": "معرف المنطقة",
                                         "type": "integer",
-                                        "example": 5,
                                         "nullable": true
                                     },
                                     "interface_language_id": {
-                                        "description": "معرف لغة الواجهة",
                                         "type": "integer",
-                                        "example": 1,
                                         "nullable": true
                                     },
                                     "timezone": {
-                                        "description": "المنطقة الزمنية",
                                         "type": "string",
-                                        "example": "Asia/Damascus",
                                         "nullable": true
                                     }
                                 },
@@ -1094,6 +1404,34 @@
                     }
                 ]
             }
+        },
+        "/v1/meta/translations/{lang}": {
+            "get": {
+                "tags": [
+                    "Meta - I18N"
+                ],
+                "summary": "جلب ترجمات واجهة المستخدم للغة",
+                "operationId": "6e8fee3656275bd828cd0905e915323d",
+                "parameters": [
+                    {
+                        "name": "lang",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "ar"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "الترجمات واتجاه الكتابة"
+                    },
+                    "404": {
+                        "description": "اللغة غير موجودة أو غير مفعّلة"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1106,6 +1444,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Admin - I18N",
+            "description": "Admin - I18N"
+        },
         {
             "name": "Admin - Users",
             "description": "Admin - Users"
@@ -1129,6 +1471,10 @@
         {
             "name": "Profile",
             "description": "Profile"
+        },
+        {
+            "name": "Meta - I18N",
+            "description": "Meta - I18N"
         }
     ]
 }

@@ -2,28 +2,31 @@
 
 namespace App\Http\Requests\Admin\I18n;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Models\UiTranslation;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateTranslationRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()?->can('create', UiTranslation::class) ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'group' => ['required', 'string', 'max:50'],
+            'key' => ['required', 'string', 'max:150'],
+            'translations' => ['required', 'array', 'min:1'],
+            'translations.*.language' => [
+                'required',
+                'string',
+                'size:2',
+                'distinct',
+                Rule::exists('languages', 'code'),
+            ],
+            'translations.*.value' => ['required', 'string'],
         ];
     }
 }

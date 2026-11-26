@@ -7,13 +7,22 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UiTranslationResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'uuid' => $this->uuid,
+            'group' => $this->group,
+            'key' => $this->key,
+            'value' => $this->value,
+            'language' => $this->whenLoaded('language', function () {
+                return [
+                    'code' => $this->language->code,
+                    'name' => $this->language->name,
+                    'direction' => $this->language->direction,
+                ];
+            }),
+
+            'updated_at' => $this->updated_at?->toISOString(),
+        ];
     }
 }
