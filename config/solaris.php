@@ -28,9 +28,16 @@ return [
     'mfa' => [
         'mode' => env('SOLARIS_MFA_MODE', 'warn'),
     ],
-    
+
     'region_policy_keys' => [
         'courses.free_access' => ['type' => 'boolean'],
+    ],
+
+    'rate_limits' => [
+        'login_per_minute' => (int) env('RATE_LIMIT_LOGIN', 5),
+        'code_per_minute' => (int) env('RATE_LIMIT_CODE', 5),
+        'register_per_minute' => (int) env('RATE_LIMIT_REGISTER', 5),
+        'api_per_minute' => (int) env('RATE_LIMIT_API', 60),
     ],
 
     'geo_reference_cache_seconds' => 3600,

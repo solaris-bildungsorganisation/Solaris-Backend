@@ -6,11 +6,15 @@ use App\Models\AccessScope;
 use App\Models\User;
 use App\Notifications\Channels\SafeBroadcastChannel;
 use App\Notifications\Channels\SmsChannel;
-use App\Services\Notifications\LogSmsProvider;
+use App\Policies\NotificationPolicy;
 use App\Services\Rbac\AccessResolver;
 use App\Services\Rbac\MfaGuard;
 use Database\Seeders\Rbac\RbacCatalog;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Notifications\ChannelManager;
 
@@ -31,10 +35,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->app->make(ChannelManager::class)->extend('sms', fn () => $this->app->make(SmsChannel::class));
-        $this->app->make(ChannelManager::class)->extend('broadcast', fn () => $this->app->make(SafeBroadcastChannel::class));
+        // $this->app->make(ChannelManager::class)->extend('sms', fn () => $this->app->make(SmsChannel::class));
+        // $this->app->make(ChannelManager::class)->extend('broadcast', fn () => $this->app->make(SafeBroadcastChannel::class));
         $this->registerAuthorizationGate();
-        Gate::policy(\Illuminate\Notifications\DatabaseNotification::class, \App\Policies\NotificationPolicy::class);
+        Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
+        $this->configureRateLimiting();
     }
 
     /**
@@ -82,5 +87,25 @@ class AppServiceProvider extends ServiceProvider
 
             return $access->has($ability) ? true : null;
         });
+
+    }
+
+    private function configureRateLimiting(): void
+    {
+        RateLimiter::for('login-auth', fn (Request $request) => Limit::perMinute(
+            config('solaris.rate_limits.login_per_minute')
+        )->by($request->ip().'|'.strtolower((string) $request->input('email'))));
+
+        RateLimiter::for('code-auth', fn (Request $request) => Limit::perMinute(
+            config('solaris.rate_limits.code_per_minute')
+        )->by($request->ip().'|'.strtolower((string) $request->input('email'))));
+
+        RateLimiter::for('auth-register', fn (Request $request) => Limit::perMinute(
+            config('solaris.rate_limits.register_per_minute')
+        )->by($request->ip()));
+
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(
+            config('solaris.rate_limits.api_per_minute')
+        )->by($request->user()?->getKey() ?: $request->ip()));
     }
 }

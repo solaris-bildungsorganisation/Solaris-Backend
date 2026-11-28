@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureMfaConfirmed;
 use App\Http\Middleware\EnsureSessionIsValid;
 use App\Http\Middleware\ResolveAccessScope;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -28,8 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // B4: كل طلب API يضبط نطاق الصلاحيات (العام افتراضيًا أو active_scope_id من الجلسة).
         // الأولوية تضمن تشغيله بعد auth:sanctum حتى يكون المستخدم معروفًا.
         $middleware->api(append: [ResolveAccessScope::class]);
+        $middleware->append(SecurityHeaders::class);
         $middleware->appendToPriorityList(AuthenticatesRequests::class, ResolveAccessScope::class);
-
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
