@@ -4,22 +4,25 @@ declare(strict_types=1);
 
 namespace App\Services\Notifications;
 
+use App\Http\Resources\NotificationResource;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PlatformNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     /**
-     * @param string $notificationUuid
-     * @param string $typeKey
-     * @param array<int, string> $channels
-     * @param array<string, array{subject: ?string, body: string}> $renderedTemplates
-     * @param array<string, mixed> $data
-     * @param array<string, mixed> $options
+     * @param  array<int, string>  $channels
+     * @param  array<string, array{subject: ?string, body: string}>  $renderedTemplates
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $options
      */
     public function __construct(
         string $notificationUuid,
@@ -28,6 +31,7 @@ class PlatformNotification extends Notification implements ShouldQueue
         private readonly array $renderedTemplates,
         private readonly array $data = [],
         private readonly array $options = [],
+        private readonly ?string $recipientUuid = null,
     ) {
         $this->id = $notificationUuid;
     }
@@ -35,7 +39,62 @@ class PlatformNotification extends Notification implements ShouldQueue
     public function via(object $notifiable): array
     {
         unset($notifiable);
-        return $this->channels;
+
+        $channels = $this->channels;
+        if (\in_array('database', $channels, true) && ! \in_array('broadcast', $channels, true)) {
+            $channels[] = 'broadcast';
+        }
+
+        return $channels;
+    }
+
+    public function broadcastOn($notifiable = null)
+    {
+        unset($notifiable);
+
+        if (!$this->recipientUuid) {
+            return [];
+        }
+
+        return [new PrivateChannel('users.'.(string) $this->recipientUuid)];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'notification.created';
+    }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        try {
+            $notification = $notifiable->notifications()->find($this->id);
+
+            if ($notification) {
+                $payload = (new NotificationResource($notification))->resolve();
+            } else {
+                $payload = $this->removeSecrets($this->toDatabase($notifiable));
+            }
+        } catch (Throwable $exception) {
+            Log::warning('Building real-time notification payload failed', [
+                'notification_class' => static::class,
+                'exception' => $exception::class,
+            ]);
+            $payload = $this->removeSecrets($this->toDatabase($notifiable));
+        }
+
+        $payload = $this->removeSecrets(\is_array($payload) ? $payload : []);
+
+        try {
+            $payload['unread_count'] = $notifiable->unreadNotifications()->count();
+        } catch (Throwable $exception) {
+            Log::warning('Calculating unread notification count failed', [
+                'notification_class' => static::class,
+                'exception' => $exception::class,
+            ]);
+            $payload['unread_count'] = 0;
+        }
+
+        return new BroadcastMessage($payload);
     }
 
     public function toDatabase(object $notifiable): array
@@ -56,11 +115,11 @@ class PlatformNotification extends Notification implements ShouldQueue
         unset($notifiable);
         $mail = $this->renderedTemplates['mail'] ?? ['subject' => '', 'body' => ''];
 
-        $message = (new MailMessage())
+        $message = (new MailMessage)
             ->subject((string) ($mail['subject'] ?? ''))
             ->line((string) ($mail['body'] ?? ''));
 
-        if (!empty($this->options['secret'])) {
+        if (! empty($this->options['secret'])) {
             $message->line((string) $this->options['secret']);
         }
 
@@ -81,6 +140,7 @@ class PlatformNotification extends Notification implements ShouldQueue
         foreach ($value as $key => $item) {
             if (\is_string($key) && \in_array(strtolower($key), $secretKeys, true)) {
                 unset($value[$key]);
+
                 continue;
             }
 

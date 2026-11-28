@@ -56,32 +56,45 @@ class LoginController extends Controller
                     ->orWhere('phone', $identifier);
             })
             ->first();
-        if (! $user) {
-            return response()->json([
-                'message' => 'بيانات الدخول غير صحيحة.',
-            ], 401);
-        }
-        if ($user->locked_until?->isFuture()) {
-            return response()->json([
-                'message' => 'الحساب مقفل مؤقتاً بسبب محاولات دخول فاشلة.',
-            ], 423);
-        }
-        if ($user->status !== 'active') {
-            return response()->json([
-                'message' => 'الحساب غير مفعل أو غير متاح لتسجيل الدخول.',
-            ], 403);
-        }
-        if (! Hash::check($data['password'], $user->password)) {
-            $user->failed_login_count++;
-            if ($user->failed_login_count >= 5) {
-                $user->locked_until = now()->addMinutes(15);
-            }
-            $user->save();
+      if (! $user) {
+    return response()->json([
+        'message' => 'بيانات الدخول غير صحيحة.',
+    ], 401);
+}
 
-            return response()->json([
-                'message' => 'بيانات الدخول غير صحيحة.'
-            ], 401);
-        }
+if ($user->locked_until?->isFuture()) {
+    return response()->json([
+        'message' => 'الحساب مقفل مؤقتاً بسبب محاولات دخول فاشلة.',
+    ], 423);
+}
+
+// انتهت مدة القفل: إعادة العداد إلى الصفر قبل فحص كلمة المرور.
+if ($user->locked_until !== null) {
+    $user->forceFill([
+        'failed_login_count' => 0,
+        'locked_until' => null,
+    ])->save();
+}
+
+if ($user->status !== 'active') {
+    return response()->json([
+        'message' => 'الحساب غير مفعل أو غير متاح لتسجيل الدخول.',
+    ], 403);
+}
+
+if (! Hash::check($data['password'], $user->password)) {
+    $user->failed_login_count++;
+
+    if ($user->failed_login_count >= 5) {
+        $user->locked_until = now()->addMinutes(15);
+    }
+
+    $user->save();
+
+    return response()->json([
+        'message' => 'بيانات الدخول غير صحيحة.',
+    ], 401);
+}
         $user->failed_login_count = 0;
         $user->locked_until = null;
         $user->last_login_at = now();

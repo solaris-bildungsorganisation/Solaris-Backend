@@ -57,3 +57,59 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Real-Time Notifications (N4)
+
+In-app real-time notifications are delivered over private **Laravel Reverb** channels.
+
+### Connection & Authentication
+
+- **Channel Name (Client-side):** `private-users.{uuid}`
+- **Broadcast Channel (Backend):** `users.{uuid}` (automatically prefixed with `private-` by Laravel)
+- **Auth Endpoint:** `POST /broadcasting/auth` (protected via `auth:sanctum` middleware)
+- **Event Name:** `.notification.created`
+
+### Example Payload
+
+```json
+{
+    "id": "9d4f2a1b-1234-4567-89ab-abcdef123456",
+    "category": "account",
+    "type": "account.verification_code",
+    "title": "Verification Code",
+    "body": "A verification code was requested.",
+    "action_url": null,
+    "read_at": null,
+    "created_at": "2026-11-20T18:00:00.000000Z",
+    "unread_count": 3
+}
+```
+
+### Frontend Usage (Laravel Echo)
+
+```js
+Echo.private(`users.${user.uuid}`).listen(
+    ".notification.created",
+    (payload) => {
+        console.log(payload, payload.unread_count);
+    },
+);
+```
+
+### Local Development Setup
+
+Ensure the following variables are configured in your local `.env` file, then start the Reverb server:
+
+```env
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=
+REVERB_APP_KEY=
+REVERB_APP_SECRET=
+REVERB_HOST="localhost"
+REVERB_PORT=8080
+REVERB_SCHEME=http
+```
+
+```bash
+php artisan reverb:start
+```

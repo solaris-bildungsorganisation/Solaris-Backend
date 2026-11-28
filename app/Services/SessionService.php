@@ -27,11 +27,11 @@ class SessionService
     {
         DB::transaction(function () use ($session, $by, $reason) {
             $session->accessToken?->delete();
-            $session->update([
+            $session->forceFill([
                 'revoked_at' => now(),
                 'revoked_by' => $by?->id,
                 'revoke_reason' => $reason,
-            ]);
+            ])->save();
         });
     }
 
@@ -40,6 +40,6 @@ class SessionService
         $user->sessions()->active()
             ->when($keep, fn ($q) => $q->where('id', '!=', $keep->id))
             ->get()
-            ->each(fn (UserSession $s) => $this->revoke($s, $by, $reason));
+            ->each(fn (UserSession $session) => $this->revoke($session, $by, $reason));
     }
 }
