@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Notifications\ChannelManager;
 use App\Models\AccessScope;
 use App\Models\User;
 use App\Notifications\Channels\SafeBroadcastChannel;

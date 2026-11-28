@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Seeders\Notifications\NotificationCatalogSeeder;
+use Database\Seeders\Notifications\NotificationTemplateSeeder;
 use Database\Seeders\Rbac\ContextSeeder;
 use Database\Seeders\Rbac\PermissionSeeder;
 use Database\Seeders\Rbac\RoleSeeder;
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RoleSeeder::class,
             NotificationCatalogSeeder::class,
+            NotificationTemplateSeeder::class,
             SuperAdminSeeder::class,
         ]);
     }

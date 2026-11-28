@@ -10,10 +10,16 @@ use App\Models\UserSession;
 use App\Services\SessionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
+use App\Services\Notifications\NotificationService;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 class PasswordController extends Controller
 {
-    public function __invoke(ChangePasswordRequest $request, SessionService $sessionService)
+   public function __invoke(
+    ChangePasswordRequest $request,
+    SessionService $sessionService,
+    NotificationService $notificationService,
+)
     {
         $user = $request->user();
         $newPassword = $request->string('password')->toString();
@@ -64,7 +70,13 @@ class PasswordController extends Controller
         });
 
         $sessionService->revokeAllExcept($user, $currentSession, $user, 'password_changed');
-
+        try {
+    $notificationService->send($user, 'security.password_changed');
+} catch (Throwable $exception) {
+    Log::warning('Failed to send password changed notification.', [
+        'user_id' => $user->getKey(),
+    ]);
+}
         return response()->json([
             'message' => 'تم تغيير كلمة المرور بنجاح.',
         ]);
