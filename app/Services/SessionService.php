@@ -34,12 +34,12 @@ class SessionService
             ])->save();
         });
     }
-
-    public function revokeAllExcept(User $user, ?UserSession $keep, ?User $by, string $reason): void
+public function revokeAllExcept(User $user, ?UserSession $keep, ?User $by, string $reason): void
     {
-        $user->sessions()->active()
+        $user->sessions()->whereNull('revoked_at')
             ->when($keep, fn ($q) => $q->where('id', '!=', $keep->id))
             ->get()
             ->each(fn (UserSession $session) => $this->revoke($session, $by, $reason));
     }
 }
+
