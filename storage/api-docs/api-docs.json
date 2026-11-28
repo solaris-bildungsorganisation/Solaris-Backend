@@ -517,6 +517,781 @@
                 ]
             }
         },
+        "/v1/admin/success-stories": {
+            "get": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "List success stories within the authorized scope",
+                "operationId": "7542b44e85ca58fa6174270a786c6ad7",
+                "responses": {
+                    "200": {
+                        "description": "Success story list"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Create a success story draft",
+                "operationId": "c6d4091576ace8c116a13941ad1a5de0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Draft created"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Permission or scope denied"
+                    },
+                    "422": {
+                        "description": "Invalid input"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/success-stories/{story}": {
+            "get": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Show an administrative success story",
+                "operationId": "cfd6db71fff5963fafb23bd1e2135321",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success story data"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Replace editable success story fields",
+                "operationId": "c4a139a55f5b5bc68fc6d77076e91b86",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Story updated"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    },
+                    "422": {
+                        "description": "Invalid input or protected fields"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Soft-delete a success story",
+                "operationId": "e3a84dd1c066743f6b9c84a0583169e0",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Story soft-deleted"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Partially update editable success story fields",
+                "operationId": "da7c9ac02cabc5935cae1696f2c2cf36",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Story updated"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    },
+                    "422": {
+                        "description": "Invalid input or protected fields"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/success-stories/{story}/consent": {
+            "patch": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Record or change success story consent",
+                "operationId": "af04cda683b5d8cb2d81ab36d8a4cdea",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "consent_status"
+                                ],
+                                "properties": {
+                                    "consent_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "granted",
+                                            "not_required",
+                                            "withdrawn"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Consent recorded"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    },
+                    "422": {
+                        "description": "Invalid consent value or combination"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/success-stories/{story}/submit": {
+            "post": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Submit a draft for review",
+                "operationId": "c01b197c9249bcc53f8dbc0bf63c7c02",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Story submitted for review"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    },
+                    "422": {
+                        "description": "Invalid status transition"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/success-stories/{story}/publish": {
+            "post": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Publish a story under review",
+                "operationId": "e72d91bc7bd498410f79856298d937d5",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Story published"
+                    },
+                    "403": {
+                        "description": "Permission denied or author attempted self-publication"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    },
+                    "422": {
+                        "description": "Story not under review or consent invalid"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/success-stories/{story}/archive": {
+            "post": {
+                "tags": [
+                    "Admin - Success Stories"
+                ],
+                "summary": "Archive a success story",
+                "operationId": "569d4063cc4937f609aa9b64fb8c38fd",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Story archived"
+                    },
+                    "403": {
+                        "description": "Permission denied"
+                    },
+                    "404": {
+                        "description": "Story not found or outside scope"
+                    },
+                    "422": {
+                        "description": "Story already archived"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "عرض قائمة المستخدمين مع إمكانية التصفية والترقيم",
+                "operationId": "7af0ac677b43588f94e057499222fe73",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "تصفية حسب الاسم",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "تصفية حسب البريد الإلكتروني",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phone",
+                        "in": "query",
+                        "description": "تصفية حسب رقم الهاتف",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "تصفية حسب حالة الحساب",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "country_id",
+                        "in": "query",
+                        "description": "تصفية حسب معرف الدولة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "region_id",
+                        "in": "query",
+                        "description": "تصفية حسب معرف المنطقة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "تصفية حسب الدور",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "context",
+                        "in": "query",
+                        "description": "تصفية حسب السياق",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "organization",
+                        "in": "query",
+                        "description": "تصفية حسب المنظمة",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "عدد العناصر في كل صفحة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب قائمة المستخدمين بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لعرض المستخدمين"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "إنشاء مستخدم جديد",
+                "operationId": "6ed70b9b54cff920607a019cac1e9f73",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "description": "الاسم الأول",
+                                        "type": "string",
+                                        "example": "أحمد",
+                                        "maxLength": 255
+                                    },
+                                    "last_name": {
+                                        "description": "الاسم الأخير",
+                                        "type": "string",
+                                        "example": "محمد",
+                                        "maxLength": 255
+                                    },
+                                    "display_name": {
+                                        "description": "الاسم الظاهر",
+                                        "type": "string",
+                                        "example": "أحمد محمد",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "description": "البريد الإلكتروني (مطلوب في حال عدم إدخال رقم الهاتف)",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ahmed@example.com",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "description": "رقم الهاتف (مطلوب في حال عدم إدخال البريد الإلكتروني)",
+                                        "type": "string",
+                                        "example": "+963912345678",
+                                        "nullable": true,
+                                        "maxLength": 30
+                                    },
+                                    "country_id": {
+                                        "description": "معرف الدولة",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "description": "معرف المنطقة",
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "interface_language_id": {
+                                        "description": "معرف لغة الواجهة",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "timezone": {
+                                        "description": "المنطقة الزمنية",
+                                        "type": "string",
+                                        "example": "Asia/Damascus",
+                                        "nullable": true
+                                    },
+                                    "organization_id": {
+                                        "description": "معرف المنظمة (UUID)",
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                                        "nullable": true
+                                    },
+                                    "membership_type": {
+                                        "description": "نوع العضوية (ممنوع إرساله بدون organization_id)",
+                                        "type": "string",
+                                        "example": "member",
+                                        "nullable": true,
+                                        "enum": [
+                                            "member",
+                                            "staff",
+                                            "learner",
+                                            "instructor",
+                                            "employer_representative",
+                                            "partner_contact",
+                                            "volunteer"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لإنشاء مستخدم"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/users/{user}": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "عرض تفاصيل مستخدم محدد",
+                "operationId": "a26cbc5356a3d0107ca664239c1c0229",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "معرف المستخدم (ID أو UUID حسب التوجيه)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب بيانات المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لعرض هذا المستخدم"
+                    },
+                    "404": {
+                        "description": "المستخدم غير موجود"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "تحديث بيانات مستخدم موجود",
+                "operationId": "170d49164a47436bad2ab2072f0482da",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "معرف المستخدم",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "display_name": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "country_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "interface_language_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث بيانات المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لتعديل هذا المستخدم"
+                    },
+                    "404": {
+                        "description": "المستخدم غير موجود"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "tags": [
@@ -662,6 +1437,48 @@
                     },
                     "422": {
                         "description": "فشل التحقق من المدخلات أو البريد/الهاتف مستخدم مسبقًا"
+                    }
+                }
+            }
+        },
+        "/v1/success-stories": {
+            "get": {
+                "tags": [
+                    "Success Stories"
+                ],
+                "summary": "List published success stories",
+                "operationId": "7e8a6c7d2613b54905cb3f0dc68c5b61",
+                "responses": {
+                    "200": {
+                        "description": "Published stories in requested language"
+                    }
+                }
+            }
+        },
+        "/v1/success-stories/{story}": {
+            "get": {
+                "tags": [
+                    "Success Stories"
+                ],
+                "summary": "Show a published success story",
+                "operationId": "2ca37e6638ceb2221cfbe5c07b5d6b36",
+                "parameters": [
+                    {
+                        "name": "story",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Published story in requested language"
+                    },
+                    "404": {
+                        "description": "Story not found or not published"
                     }
                 }
             }
@@ -1965,8 +2782,20 @@
             "description": "Admin Organizations"
         },
         {
+            "name": "Admin - Success Stories",
+            "description": "Admin - Success Stories"
+        },
+        {
+            "name": "Admin - Users",
+            "description": "Admin - Users"
+        },
+        {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Success Stories",
+            "description": "Success Stories"
         },
         {
             "name": "Profile - Account Type Requests",

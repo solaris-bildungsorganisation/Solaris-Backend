@@ -12,6 +12,7 @@ use App\Services\Rbac\MfaGuard;
 use Database\Seeders\Rbac\RbacCatalog;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Notifications\ChannelManager;
 
 class AppServiceProvider extends ServiceProvider
 {
