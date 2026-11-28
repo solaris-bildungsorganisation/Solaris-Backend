@@ -10,6 +10,174 @@
         }
     ],
     "paths": {
+        "/v1/admin/audit-logs": {
+            "get": {
+                "tags": [
+                    "Admin - Audit Logs"
+                ],
+                "summary": "عرض سجلات التدقيق",
+                "description": "يعرض سجلات النشاط والتدقيق ضمن الصلاحيات والنطاقات الممنوحة للمستخدم مع إمكانية التصفية والترقيم.",
+                "operationId": "adminAuditLogsIndex",
+                "parameters": [
+                    {
+                        "name": "log_name",
+                        "in": "query",
+                        "description": "اسم السجل للتصفية",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "default"
+                        }
+                    },
+                    {
+                        "name": "event",
+                        "in": "query",
+                        "description": "نوع الحدث للتصفية",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "updated"
+                        }
+                    },
+                    {
+                        "name": "causer",
+                        "in": "query",
+                        "description": "معرّف المتسبب بالحدث (causer_id)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "subject_type",
+                        "in": "query",
+                        "description": "نوع الكيان المتأثر بالحدث",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "App\\Models\\User"
+                        }
+                    },
+                    {
+                        "name": "organization",
+                        "in": "query",
+                        "description": "معرّف المنظمة للتصفية",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "عدد السجلات في الصفحة الواحدة (من 1 إلى 100، الافتراضي 20)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "رقم الصفحة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب سجلات التدقيق بنجاح",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 20
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 50
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لعرض سجلات التدقيق"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/audit-logs/{activity}": {
+            "get": {
+                "tags": [
+                    "Admin - Audit Logs"
+                ],
+                "summary": "عرض تفاصيل سجل التدقيق",
+                "description": "يعرض تفاصيل سجل التدقيق بما فيها الخصائص القديمة والجديدة ضمن الصلاحيات والنطاقات الممنوحة للمستخدم.",
+                "operationId": "783a03953826984fda9e6e2669befc7d",
+                "parameters": [
+                    {
+                        "name": "activity",
+                        "in": "path",
+                        "description": "معرّف سجل التدقيق",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب تفاصيل سجل التدقيق بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية أو السجل خارج نطاق الوصول"
+                    },
+                    "404": {
+                        "description": "سجل التدقيق غير موجود"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/admin/countries": {
             "get": {
                 "tags": [
@@ -508,6 +676,371 @@
                     },
                     "422": {
                         "description": "مدخلات غير صحيحة"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "عرض قائمة المستخدمين مع إمكانية التصفية والترقيم",
+                "operationId": "7af0ac677b43588f94e057499222fe73",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "تصفية حسب الاسم",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "تصفية حسب البريد الإلكتروني",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phone",
+                        "in": "query",
+                        "description": "تصفية حسب رقم الهاتف",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "تصفية حسب حالة الحساب",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "country_id",
+                        "in": "query",
+                        "description": "تصفية حسب معرف الدولة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "region_id",
+                        "in": "query",
+                        "description": "تصفية حسب معرف المنطقة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "تصفية حسب الدور",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "context",
+                        "in": "query",
+                        "description": "تصفية حسب السياق",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "organization",
+                        "in": "query",
+                        "description": "تصفية حسب المنظمة",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "عدد العناصر في كل صفحة",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب قائمة المستخدمين بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لعرض المستخدمين"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "إنشاء مستخدم جديد",
+                "operationId": "6ed70b9b54cff920607a019cac1e9f73",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "description": "الاسم الأول",
+                                        "type": "string",
+                                        "example": "أحمد",
+                                        "maxLength": 255
+                                    },
+                                    "last_name": {
+                                        "description": "الاسم الأخير",
+                                        "type": "string",
+                                        "example": "محمد",
+                                        "maxLength": 255
+                                    },
+                                    "display_name": {
+                                        "description": "الاسم الظاهر",
+                                        "type": "string",
+                                        "example": "أحمد محمد",
+                                        "nullable": true,
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "description": "البريد الإلكتروني (مطلوب في حال عدم إدخال رقم الهاتف)",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ahmed@example.com",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "description": "رقم الهاتف (مطلوب في حال عدم إدخال البريد الإلكتروني)",
+                                        "type": "string",
+                                        "example": "+963912345678",
+                                        "nullable": true,
+                                        "maxLength": 30
+                                    },
+                                    "country_id": {
+                                        "description": "معرف الدولة",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "description": "معرف المنطقة",
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "interface_language_id": {
+                                        "description": "معرف لغة الواجهة",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "timezone": {
+                                        "description": "المنطقة الزمنية",
+                                        "type": "string",
+                                        "example": "Asia/Damascus",
+                                        "nullable": true
+                                    },
+                                    "organization_id": {
+                                        "description": "معرف المنظمة (UUID)",
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                                        "nullable": true
+                                    },
+                                    "membership_type": {
+                                        "description": "نوع العضوية (ممنوع إرساله بدون organization_id)",
+                                        "type": "string",
+                                        "example": "member",
+                                        "nullable": true,
+                                        "enum": [
+                                            "member",
+                                            "staff",
+                                            "learner",
+                                            "instructor",
+                                            "employer_representative",
+                                            "partner_contact",
+                                            "volunteer"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "تم إنشاء المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لإنشاء مستخدم"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/admin/users/{user}": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "عرض تفاصيل مستخدم محدد",
+                "operationId": "a26cbc5356a3d0107ca664239c1c0229",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "معرف المستخدم (ID أو UUID حسب التوجيه)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "تم جلب بيانات المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لعرض هذا المستخدم"
+                    },
+                    "404": {
+                        "description": "المستخدم غير موجود"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "تحديث بيانات مستخدم موجود",
+                "operationId": "170d49164a47436bad2ab2072f0482da",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "معرف المستخدم",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "display_name": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "country_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "region_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "interface_language_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "timezone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "تم تحديث بيانات المستخدم بنجاح"
+                    },
+                    "401": {
+                        "description": "غير مصرح بالدخول"
+                    },
+                    "403": {
+                        "description": "ليس لديك صلاحية لتعديل هذا المستخدم"
+                    },
+                    "404": {
+                        "description": "المستخدم غير موجود"
+                    },
+                    "422": {
+                        "description": "فشل التحقق من المدخلات"
                     }
                 },
                 "security": [
@@ -1957,12 +2490,20 @@
     },
     "tags": [
         {
+            "name": "Admin - Audit Logs",
+            "description": "Admin - Audit Logs"
+        },
+        {
             "name": "Admin Geo",
             "description": "Admin Geo"
         },
         {
             "name": "Admin Organizations",
             "description": "Admin Organizations"
+        },
+        {
+            "name": "Admin - Users",
+            "description": "Admin - Users"
         },
         {
             "name": "Auth",
